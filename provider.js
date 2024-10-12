@@ -4,25 +4,40 @@ async function scheduleHtmlProvider() {
     ajaxForm.append(messages);
     messages.innerHTML += "开始获取课表<br />";
 
-    let params = `?xnm=${document.querySelector("#xnm").value}&xqm=${document.querySelector("#xqm").value}&kzlx=ck`;
-    let url = "/jwglxt/kbcx/xskbcx_cxXsgrkb.html";
+    const params = `?xnm=${document.querySelector("#xnm").value}&xqm=${document.querySelector("#xqm").value}&kzlx=ck`;
+    const url = "/jwglxt/kbcx/xskbcx_cxXsgrkb.html";
     messages.innerHTML += "已设置参数（url, params）<br />";
 
     messages.innerHTML += "准备发送获取数据请求，请等待课表数据返回（ajax）<br />";
-    let json = await ajax(url + params);
+    let scheduleRawJson = await ajax(url + params);
     messages.innerHTML += "已获取课表数据<br />";
 
     // return json;
-    let parsed = scheduleHtmlParser(json);
-    messages.innerHTML += "共" + JSON.parse(parsed).length + "节课<br />";
+    let scheduleJson = scheduleHtmlParser(scheduleRawJson);
+    let schedule = JSON.parse(scheduleJson);
+    const courseCount = schedule.length;
+    messages.innerHTML += "共" + courseCount + "节课<br />";
+    if (courseCount > maxCourses) {
+        messages.innerHTML += "<span style='color: red;'>课程数量超过了小爱课程表能导入的上限...请选择要导入的范围：</span><br />";
+    }
+    rangeStartOnInput = function rangeStartOnInput(e) {
+        let start = e.target.value;
+        e.target.querySelector("span").innerHTML = showRangeEnd(schedule, start);
+
+        function showRangeEnd(schedule, start) {
+            // schedule.find(e=>e.)
+        }
+    }
+
+
     messages.innerHTML += "3秒后开始导入<br /><br />";
-    messages.innerHTML += parsed;
+    messages.innerHTML += scheduleJson;
 
     await new Promise(resolve => {
         setTimeout(resolve, 3000);
     });
 
-    return parsed;
+    return scheduleJson;
 }
 
 function ajax(url) {
@@ -35,6 +50,8 @@ function ajax(url) {
         xhr.send();
     });
 }
+
+function rangeStartOnInput() { }
 
 
 
@@ -51,12 +68,12 @@ function ajax(url) {
 
 const maxCourses = 150;
 
-function scheduleHtmlParser(html) { // 主函数
-    let kbList = JSON.parse(html)["kbList"];
+function scheduleHtmlParser(scheduleRawJson) { // 主函数
+    let kbList = JSON.parse(scheduleRawJson)["kbList"];
     // console.log(kbList)
-    let coursesRaw = [];
+    let scheduleRaw = [];
     for (let course of kbList) {
-        coursesRaw.push({
+        scheduleRaw.push({
             name: course["kcmc"] ?? "-", // 课程名称
             position: course["cdmc"] ?? "-", // 上课地点
             teacher: course["xm"] ?? "-", // 教师姓名
@@ -65,27 +82,13 @@ function scheduleHtmlParser(html) { // 主函数
             sections: sectionsAnalyzer(course["jcs"]) // 上课节次（的第几节）
         });
     }
-    // console.log(coursesRaw);
+    // console.log(scheduleRaw);
 
-    let courses1 = coursesResolveConflicts(coursesRaw); // 处理冲突课程
-    // console.log(coursesNoConflict);
-    let courses2 = coursesMergeWeeks(courses1); // 合并不同周的相同课程
-    // console.log(coursesMergedWeeks);
-    let courses3 = (() => {
-        if (courses2.length > maxCourses) { //如果课还是太多，就合并不同教师的相同课程
-            let courses3 = coursesMergeTeachers(courses2);
-            return courses3;
-        }
-        return courses2;
-    })();
-    let courses4 = (() => {
-        if (courses3.length > maxCourses) { //如果课还是太多，就合并不同教室的相同课程
-            let courses4 = coursesMergeClassrooms(courses3);
-            return courses4;
-        }
-        return courses3;
-    })();
-    return courses4;
+    let schedule1 = scheduleResolveConflicts(scheduleRaw); // 处理冲突课程
+    // console.log(scheduleNoConflict);
+    let schedule2 = scheduleMergeWeeks(schedule1); // 合并不同周的相同课程
+    // console.log(scheduleMergedWeeks);
+    return schedule2;
 }
 
 function weeksAnalyzer(weeksString) { // eg: "4-6周(双),7-11周,13周"
@@ -119,32 +122,31 @@ function sectionsAnalyzer(sectionsString) {
     return sections;
 }
 
-function coursesResolveConflicts(courses) {
-    let coursesOrdered = [];
+function scheduleResolveConflicts(schedule) {
+    // slice courses & resolve conflicts
+    let scheduleOrdered = [];
     let changePointsOrdered = [];
-    for (let course of courses) {
+    for (let course of schedule) {
         let weeks = course["weeks"];
         let day = course["day"];
         let sections = course["sections"];
         for (let week of weeks) {
-            if (!coursesOrdered[week]) coursesOrdered[week] = [];
-            if (!coursesOrdered[week][day]) coursesOrdered[week][day] = [];
+            if (!scheduleOrdered[week]) scheduleOrdered[week] = [];
+            if (!scheduleOrdered[week][day]) scheduleOrdered[week][day] = [];
             for (let sectionJson of sections) {
                 let section = sectionJson["section"];
-                if (!coursesOrdered[week][day][section]) {
-                    coursesOrdered[week][day][section] = {
+                const conflictCourse = scheduleOrdered[week][day][section];
+                scheduleOrdered[week][day][section] = conflictCourse ?
+                    {
+                        name: conflictCourse["name"] + "&" + course["name"],
+                        position: conflictCourse["position"] + "&" + course["position"],
+                        teacher: conflictCourse["teacher"] + "&" + course["teacher"]
+                    } :
+                    {
                         name: course["name"],
                         position: course["position"],
                         teacher: course["teacher"]
                     };
-                }
-                else {
-                    coursesOrdered[week][day][section] = {
-                        name: `${coursesOrdered[week][day][section]["name"]}&${course["name"]}`,
-                        position: `${coursesOrdered[week][day][section]["position"]}&${course["position"]}`,
-                        teacher: `${coursesOrdered[week][day][section]["teacher"]}&${course["teacher"]}`
-                    };
-                }
             }
 
             if (!changePointsOrdered[week]) changePointsOrdered[week] = [];
@@ -156,14 +158,14 @@ function coursesResolveConflicts(courses) {
             changePointsOrdered[week][day] = Array.from(new Set(changePointsOrdered[week][day])).sort((a, b) => (a - b));
         }
     }
-
-    // console.log(coursesOrdered);
+    // console.log(scheduleOrdered);
     // console.log(changePointsOrdered);
 
-    let coursesNoConflict = [];
-    for (let w = 1; w < coursesOrdered.length; w++) {
-        if (!coursesOrdered[w]) continue;
-        for (let d = 1; d < coursesOrdered[w].length; d++) {
+    // merge courses
+    let scheduleNoConflict = [];
+    for (let w = 1; w < scheduleOrdered.length; w++) {
+        if (!scheduleOrdered[w]) continue;
+        for (let d = 1; d < scheduleOrdered[w].length; d++) {
             let changePointsDay = changePointsOrdered[w][d];
             if (!changePointsDay) continue;
 
@@ -171,13 +173,13 @@ function coursesResolveConflicts(courses) {
                 let changePoint = changePointsOrdered[w][d][ckpt];
                 let nextChangePoint = changePointsOrdered[w][d][ckpt + 1];
                 // if (changePoint == nextChangePoint) continue;
-                let courseOrdered = coursesOrdered[w][d][changePoint];
+                let courseOrdered = scheduleOrdered[w][d][changePoint];
                 if (!courseOrdered) continue;
                 let sections = [];
                 for (var s = changePoint; s < nextChangePoint; s++) {
                     sections.push({ "section": s });
                 }
-                coursesNoConflict.push({
+                scheduleNoConflict.push({
                     name: courseOrdered["name"],
                     position: courseOrdered["position"],
                     teacher: courseOrdered["teacher"],
@@ -188,75 +190,30 @@ function coursesResolveConflicts(courses) {
             }
         }
     }
-    return coursesNoConflict;
+    return scheduleNoConflict;
 }
 
-function coursesMergeWeeks(courses) {
-    let coursesNew = courses;
-    for (let c = 0; c < coursesNew.length; c++) {
-        if (!coursesNew[c]) continue;
-        for (let cc = c + 1; cc < coursesNew.length; cc++) {
-            if (coursesNew[cc]
-                && coursesNew[cc]["name"] == coursesNew[c]["name"]
-                && coursesNew[cc]["sections"].length == coursesNew[c]["sections"].length
-                && coursesNew[cc]["sections"][0]["section"] == coursesNew[c]["sections"][0]["section"]
-                && coursesNew[cc]["day"] == coursesNew[c]["day"]
-                && coursesNew[cc]["position"] == coursesNew[c]["position"]
-                && coursesNew[cc]["teacher"] == coursesNew[c]["teacher"]) {
-                // console.log("周合并\n" + JSON.stringify(coursesNew[cc]) + "\n" + JSON.stringify(coursesNew[c]));
-                coursesNew[c]["weeks"] = coursesNew[c]["weeks"].concat(coursesNew[cc]["weeks"]);
-                coursesNew.splice(cc, 1);
-                // console.log("合并后" + JSON.stringify(coursesNew[c]));
+function scheduleMergeWeeks(schedule) {
+    let scheduleNew = schedule;
+    for (let c = 0; c < scheduleNew.length; c++) {
+        let courseCompare1 = scheduleNew[c];
+        if (!courseCompare1) continue;
+        for (let cc = c + 1; cc < scheduleNew.length; cc++) {
+            let courseCompare2 = scheduleNew[cc];
+            if (!courseCompare2) continue;
+            const sameCourse = courseCompare2["name"] == courseCompare1["name"]
+                && courseCompare2["sections"].length == courseCompare1["sections"].length
+                && courseCompare2["sections"][0]["section"] == courseCompare1["sections"][0]["section"]
+                && courseCompare2["day"] == courseCompare1["day"]
+                && courseCompare2["position"] == courseCompare1["position"]
+                && courseCompare2["teacher"] == courseCompare1["teacher"];
+            if (sameCourse) {
+                // console.log("周合并\n" + JSON.stringify(courseCompare2) + "\n" + JSON.stringify(courseCompare1));
+                scheduleNew[c]["weeks"] = courseCompare1["weeks"].concat(courseCompare2["weeks"]);
+                scheduleNew.splice(cc, 1);
+                // console.log("合并后" + JSON.stringify(scheduleNew[c]));
             }
         }
     }
-    return coursesNew;
-}
-
-function coursesMergeTeachers(courses) {
-    let coursesNew = courses;
-    for (let c = 0; c < coursesNew.length; c++) {
-        if (!coursesNew[c]) continue;
-        for (let cc = c + 1; cc < coursesNew.length; cc++) {
-            if (coursesNew[cc]
-                && coursesNew[cc]["name"] == coursesNew[c]["name"]
-                && coursesNew[cc]["sections"].length == coursesNew[c]["sections"].length
-                && coursesNew[cc]["sections"][0]["section"] == coursesNew[c]["sections"][0]["section"]
-                && coursesNew[cc]["day"] == coursesNew[c]["day"]
-                && coursesNew[cc]["position"] == coursesNew[c]["position"]) {
-                // console.log("教师合并\n" + JSON.stringify(coursesNew[cc]) + "\n" + JSON.stringify(coursesNew[c]));
-                coursesNew[c]["teacher"] = (coursesNew[c]["teacher"].match(/^[0-9,]{1,}周:/) ? coursesNew[c]["teacher"] : (coursesNew[c]["weeks"].join(",") + "周:") + coursesNew[c]["teacher"]) + " " + (coursesNew[cc]["weeks"].join(",") + "周:" + coursesNew[cc]["teacher"]);
-                coursesNew[c]["weeks"] = coursesNew[c]["weeks"].concat(coursesNew[cc]["weeks"]);
-                coursesNew.splice(cc, 1);
-                // console.log("合并后\n" + JSON.stringify(coursesNew[c]));
-            }
-            if (coursesNew.length <= maxCourses) break;
-        }
-        if (coursesNew.length <= maxCourses) break;
-    }
-    return coursesNew;
-}
-
-function coursesMergeClassrooms(courses) {
-    let coursesNew = courses;
-    for (let c = 0; c < coursesNew.length; c++) {
-        if (!coursesNew[c]) continue;
-        for (let cc = c + 1; cc < coursesNew.length; cc++) {
-            if (coursesNew[cc]
-                && coursesNew[cc]["name"] == coursesNew[c]["name"]
-                && coursesNew[cc]["sections"].length == coursesNew[c]["sections"].length
-                && coursesNew[cc]["sections"][0]["section"] == coursesNew[c]["sections"][0]["section"]
-                && coursesNew[cc]["day"] == coursesNew[c]["day"]) {
-                // console.log("教室合并\n" + JSON.stringify(coursesNew[cc]) + "\n" + JSON.stringify(coursesNew[c]));
-                coursesNew[c]["position"] = (coursesNew[c]["position"].match(/^[0-9,]{1,}周:/) ? coursesNew[c]["position"] : (coursesNew[c]["weeks"].join(",") + "周:") + coursesNew[c]["position"]) + " " + (coursesNew[cc]["weeks"].join(",") + "周:" + coursesNew[cc]["position"]);
-                coursesNew[c]["teacher"] = (coursesNew[c]["teacher"].match(/^[0-9,]{1,}周:/) ? coursesNew[c]["teacher"] : (coursesNew[c]["weeks"].join(",") + "周:") + coursesNew[c]["teacher"]) + " " + (coursesNew[cc]["weeks"].join(",") + "周:" + coursesNew[cc]["teacher"]);
-                coursesNew[c]["weeks"] = coursesNew[c]["weeks"].concat(coursesNew[cc]["weeks"]);
-                coursesNew.splice(cc, 1);
-                // console.log("合并后\n" + JSON.stringify(coursesNew[c]));
-            }
-            if (coursesNew.length <= maxCourses) break;
-        }
-        if (coursesNew.length <= maxCourses) break;
-    }
-    return JSON.stringify(coursesNew);
+    return scheduleNew;
 }
