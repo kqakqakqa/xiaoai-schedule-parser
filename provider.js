@@ -1,59 +1,45 @@
+/* provider */
+
 async function scheduleHtmlProvider() {
     let ajaxForm = document.querySelector("#ajaxForm");
     let messages = document.createElement("div");
     ajaxForm.append(messages);
-    messages.innerHTML += "开始获取课表<br />";
+    function LogToUser(msg) {
+        console.log(msg);
+        messages.innerHTML += msg.replaceAll("\n", "<br />");
+    }
+    LogToUser("开始获取课表\n");
 
+    LogToUser("设置参数（url, params）...");
     let params = `?xnm=${document.querySelector("#xnm").value}&xqm=${document.querySelector("#xqm").value}&kzlx=ck`;
     let url = "/jwglxt/kbcx/xskbcx_cxXsgrkb.html";
-    messages.innerHTML += "已设置参数（url, params）<br />";
+    LogToUser("完成！\n");
 
-    messages.innerHTML += "准备发送获取数据请求，请等待课表数据返回（ajax）<br />";
-    let json = await ajax(url + params);
-    messages.innerHTML += "已获取课表数据<br />";
+    LogToUser("发送获取数据请求（ajax），等待课表数据返回...");
+    let json = (await fetch(url + params)).text();
+    LogToUser("完成！\n");
 
-    // return json;
-    let parsed = scheduleHtmlParser(json);
-    messages.innerHTML += "共" + JSON.parse(parsed).length + "节课<br />";
-    messages.innerHTML += "3秒后开始导入<br /><br />";
-    messages.innerHTML += parsed;
+    LogToUser("识别课程表...");
+    let parsed = scheduleHtmlParser(json, LogToUser); // return json;
+    LogToUser("完成！共" + JSON.parse(parsed).length + "节课\n\n");
+    LogToUser("3秒后进入下一步\n\n");
+    LogToUser("<button id='copySchedule'>点击复制</button><span style='font-size:8px; font-family:monospace;'>" + parsed + "</span>");
+    document.querySelector("#copySchedule").onclick = async () => await navigator.clipboard.writeText(parsed);
 
-    await new Promise(resolve => {
-        setTimeout(resolve, 3000);
-    });
-
+    await new Promise(e => setTimeout(e, 3000));
     return parsed;
 }
 
-function ajax(url) {
-    return new Promise(resolve => {
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", url);
-        xhr.onload = () => {
-            resolve(xhr.response);
-        }
-        xhr.send();
-    });
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* parser */
 
 const maxCourses = 150;
 
-function scheduleHtmlParser(html) { // 主函数
+function scheduleHtmlParser(html, LogToUser) { // 主函数
     let kbList = JSON.parse(html)["kbList"];
+    LogToUser("读取到" + kbList.length + "节课\n");
     // console.log(kbList)
+
+    LogToUser("格式转换...");
     let coursesRaw = [];
     for (let course of kbList) {
         coursesRaw.push({
@@ -65,27 +51,30 @@ function scheduleHtmlParser(html) { // 主函数
             sections: sectionsAnalyzer(course["jcs"]) // 上课节次（的第几节）
         });
     }
+    LogToUser("完成！转换了" + coursesRaw.length + "节课\n");
     // console.log(coursesRaw);
 
-    let courses1 = coursesResolveConflicts(coursesRaw); // 处理冲突课程
-    // console.log(coursesNoConflict);
+    LogToUser("处理冲突课程...");
+    let courses1 = coursesResolveConflicts(coursesRaw);
+    LogToUser("完成！处理后还有" + courses1.length + "节课\n");
+    // console.log(courses1);
+
+    LogToUser("合并不同周的相同课程...");
     let courses2 = coursesMergeWeeks(courses1); // 合并不同周的相同课程
-    // console.log(coursesMergedWeeks);
-    let courses3 = (() => {
-        if (courses2.length > maxCourses) { //如果课还是太多，就合并不同教师的相同课程
-            let courses3 = coursesMergeTeachers(courses2);
-            return courses3;
-        }
-        return courses2;
-    })();
-    let courses4 = (() => {
-        if (courses3.length > maxCourses) { //如果课还是太多，就合并不同教室的相同课程
-            let courses4 = coursesMergeClassrooms(courses3);
-            return courses4;
-        }
-        return courses3;
-    })();
-    return courses4;
+    LogToUser("完成！合并后还有" + courses2.length + "节课\n");
+    // console.log(courses2);
+
+    LogToUser("合并不同教师的相同课程...");
+    let courses3 = (courses2.length > maxCourses) ? coursesMergeTeachers(courses2) : courses2; //如果课太多，就合并不同教师的相同课程
+    LogToUser("完成！合并后还有" + courses3.length + "节课\n");
+    // console.log(courses3);
+
+    LogToUser("合并不同教室的相同课程...");
+    let courses4 = (courses3.length > maxCourses) ? coursesMergeClassrooms(courses3) : courses3; //如果课太多，就合并不同教室的相同课程
+    LogToUser("完成！合并后还有" + courses4.length + "节课\n");
+    // console.log(courses4);
+
+    return JSON.stringify(courses4);
 }
 
 function weeksAnalyzer(weeksString) { // eg: "4-6周(双),7-11周,13周"
@@ -118,6 +107,8 @@ function sectionsAnalyzer(sectionsString) {
     }
     return sections;
 }
+
+/* 通用课程表后处理 v0.1 */
 
 function coursesResolveConflicts(courses) {
     let coursesOrdered = [];
