@@ -11,22 +11,22 @@ async function scheduleHtmlProvider() {
     LogToUser("开始获取课表\n");
 
     LogToUser("设置参数（url, params）...");
-    let params = `?xnm=${document.querySelector("#xnm").value}&xqm=${document.querySelector("#xqm").value}&kzlx=ck`;
     let url = "/jwglxt/kbcx/xskbcx_cxXsgrkb.html";
+    let params = `?xnm=${document.querySelector("#xnm").value}&xqm=${document.querySelector("#xqm").value}&kzlx=ck`;
     LogToUser("完成！\n");
 
-    LogToUser("发送获取数据请求（ajax），等待课表数据返回...");
-    let json = (await fetch(url + params)).text();
-    LogToUser("完成！\n");
+    LogToUser("发送获取数据请求（fetch），等待课表数据返回...");
+    let json = await (await fetch(url + params)).text();
+    LogToUser("完成！长度" + json.length + "<button id='copyScheduleHtml'>点击复制</button>\n");
+    document.querySelector("#copyScheduleHtml").onclick = async () => await navigator.clipboard.writeText(parsed);
 
     LogToUser("识别课程表...");
     let parsed = scheduleHtmlParser(json, LogToUser); // return json;
-    LogToUser("完成！共" + JSON.parse(parsed).length + "节课\n\n");
-    LogToUser("3秒后进入下一步\n\n");
-    LogToUser("<button id='copySchedule'>点击复制</button><span style='font-size:8px; font-family:monospace;'>" + parsed + "</span>");
+    LogToUser("完成！共" + JSON.parse(parsed).length + "节课<button id='copySchedule'>点击复制</button>\n\n");
     document.querySelector("#copySchedule").onclick = async () => await navigator.clipboard.writeText(parsed);
-
+    LogToUser("3秒后进入下一步\n\n");
     await new Promise(e => setTimeout(e, 3000));
+    
     return parsed;
 }
 
