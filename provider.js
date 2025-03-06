@@ -18,13 +18,13 @@ async function scheduleHtmlProvider() {
     LogToUser("发送获取数据请求（fetch），等待课表数据返回...");
     const json = await (await fetch(url + params)).text();
     LogToUser("完成！长度" + json.length + "<button id='copyScheduleHtml'>点击复制</button>\n");
-    document.querySelector("#copyScheduleHtml").onclick = async () => await navigator.clipboard.writeText(parsed);
+    document.querySelector("#copyScheduleHtml").onclick = async () => await navigator.clipboard.writeText(json);
 
     LogToUser("识别课程表...");
     const parsed = scheduleHtmlParser(json, LogToUser); // return json;
     LogToUser("完成！共" + JSON.parse(parsed).length + "节课<button id='copySchedule'>点击复制</button>\n\n");
     document.querySelector("#copySchedule").onclick = async () => await navigator.clipboard.writeText(parsed);
-    LogToUser("3秒后进入下一步\n\n");
+    LogToUser("3秒后进入下一步");
     await new Promise(e => setTimeout(e, 3000));
 
     return parsed;
@@ -105,7 +105,7 @@ function sectionsAnalyzer(sectionsString) { // eg: "1-4"
     return sections;
 }
 
-/* 通用课程表后处理 v0.1 */
+/* 通用课程表后处理 v0.1.kqa */
 
 function coursesResolveConflicts(courses) {
     let coursesOrdered = [];
