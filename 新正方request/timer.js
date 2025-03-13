@@ -69,5 +69,5 @@ function scheduleTimer({ providerRes, parserRes } = {}) {
                 endTime: "20:40",
             }
         ], // 课程时间表，注意：总长度要和上边配置的节数加和对齐
-    }
+    };
 }

@@ -1,32 +1,47 @@
 /* provider */
 
 async function scheduleHtmlProvider() {
-    let ajaxForm = document.querySelector("#ajaxForm");
-    let messages = document.createElement("div");
-    ajaxForm.append(messages);
+    document.getElementById("xiaoai-schedule-provider-log")?.remove();
+    document.body.innerHTML += "<div id='xiaoai-schedule-provider-log'></div>";
+    let messages = document.getElementById("xiaoai-schedule-provider-log");
     function LogToUser(msg) {
         console.log(msg);
         messages.innerHTML += msg.replaceAll("\n", "<br />");
     }
+
+    LogToUser("<input type='text' id='shareKey' placeholder='请输入分享口令'/><button id='submitShareKey'>继续</button>\n");
+    let shareKey = document.getElementById("shareKey");
+    let submitShareKey = document.getElementById("submitShareKey");
+    const shareCode = await new Promise(resolve => {
+        submitShareKey.addEventListener("click", () => resolve(shareKey.value), { once: true });
+    });
     LogToUser("开始获取课表\n");
 
-    LogToUser("设置参数（url, params）...");
-    const url = "/jwglxt/kbcx/xskbcx_cxXsgrkb.html";
-    const params = `?xnm=${document.querySelector("#xnm").value}&xqm=${document.querySelector("#xqm").value}&kzlx=ck`;
+    LogToUser("设置参数（url, headers）...");
+    const url = `https://i.wakeup.fun/share_schedule/get?key=${shareCode}`;
+    const headers = {
+        "User-Agent": "okhttp/3.14.9",
+        "Connection": "Keep-Alive",
+        "Accept-Encoding": "gzip",
+        "version": "243",
+    };
     LogToUser("完成！\n");
 
     LogToUser("发送获取数据请求（fetch），等待课表数据返回...");
-    const json = await (await fetch(url + params)).text();
-    LogToUser("完成！长度" + json.length + "<button id='copyScheduleHtml'>点击复制</button>\n");
-    document.querySelector("#copyScheduleHtml").onclick = async () => await navigator.clipboard.writeText(json);
+    const response = await fetch(url, { method: "GET", headers: headers });
+    const rawText = await response.text();
+    LogToUser("完成！长度" + rawText.length + "<button id='copyScheduleHtml'>点击复制</button>\n");
+    document.querySelector("#copyScheduleHtml").onclick = async () => await navigator.clipboard.writeText(rawText);
 
     LogToUser("识别课程表...");
-    const parsed = scheduleHtmlParser(json, LogToUser); // return json;
-    LogToUser("完成！共" + JSON.parse(parsed).length + "节课<button id='copySchedule'>点击复制</button>\n\n");
-    document.querySelector("#copySchedule").onclick = async () => await navigator.clipboard.writeText(parsed);
+    const parsed = scheduleHtmlParser(rawText, LogToUser); // return rawText;
+    if (parsed !== "do not continue") {
+        LogToUser("完成！共" + JSON.parse(parsed).length + "节课<button id='copySchedule'>点击复制</button>\n\n");
+        document.querySelector("#copySchedule").onclick = async () => await navigator.clipboard.writeText(parsed);
+    }
+
     LogToUser("3秒后进入下一步");
     await new Promise(e => setTimeout(e, 3000));
-
     return parsed;
 }
 
@@ -35,27 +50,34 @@ async function scheduleHtmlProvider() {
 const maxCourses = 150;
 
 function scheduleHtmlParser(html, LogToUser) { // 主函数
-    const kbList = JSON.parse(html)["kbList"];
-    LogToUser("读取到" + kbList.length + "节课\n");
-    // console.log(kbList)
+    const rawData = JSON.parse(html)?.data?.split("\n");
+    if (rawData.length !== 5) {
+        LogToUser("识别失败了...原因：返回的数据不符合预期格式。\n\n");
+        return "do not continue";
+    }
+    const rawTimes = JSON.parse(rawData[1]);
+    const rawCourseMaps = JSON.parse(rawData[3]);
+    const rawCourses = JSON.parse(rawData[4]);
+    LogToUser("读取到" + rawCourses.length + "节课");
 
     LogToUser("格式转换...");
-    let coursesRaw = [];
-    for (const course of kbList) {
-        coursesRaw.push({
-            name: course["kcmc"] ?? "-", // 课程名称
-            position: course["cdmc"] ?? "-", // 上课地点
-            teacher: course["xm"] ?? "-", // 教师姓名
-            weeks: weeksAnalyzer(course["zcd"]), // 上课周次（第几周）
-            day: course["xqj"], // 星期几（的周几）
-            sections: sectionsAnalyzer(course["jcs"]) // 上课节次（的第几节）
+    let courses = [];
+    for (const section of rawCourses) {
+        const name = rawCourseMaps.find(e => (e.id === section.id)).courseName;
+        courses.push({
+            name: name ?? "-", // 课程名称
+            position: section.room ?? "-", // 上课地点
+            teacher: section.teacher ?? "-", // 教师姓名
+            weeks: weeksAnalyzer(section), // 上课周次（第几周）
+            day: section.day, // 星期几（的周几）
+            sections: sectionsAnalyzer(section) // 上课节次（的第几节）
         });
     }
-    LogToUser("完成！转换了" + coursesRaw.length + "节课\n");
+    LogToUser("完成！转换了" + courses.length + "节课\n");
     // console.log(coursesRaw);
 
     LogToUser("处理冲突课程...");
-    const courses1 = coursesResolveConflicts(coursesRaw);
+    const courses1 = coursesResolveConflicts(courses);
     LogToUser("完成！处理后还有" + courses1.length + "节课\n");
     // console.log(courses1);
 
@@ -77,31 +99,19 @@ function scheduleHtmlParser(html, LogToUser) { // 主函数
     return JSON.stringify(courses4);
 }
 
-function weeksAnalyzer(weeksString) { // eg: "4-6周(双),7-11周,13周"
+function weeksAnalyzer(course) {
     let weeks = [];
-    const weeksStringArray = weeksString.split(","); // eg: ["4-6周(双)",...]
-    for (const weekRangeString of weeksStringArray) { // eg: "4-6周(双)"
-        const weekRangeStringSplit = weekRangeString.split("周"); // eg: ["4-6","(双)"]
-        const weekRange = weekRangeStringSplit[0].split("-"); // eg: ["4","6"]
-        const weekStart = Number(weekRange[0]);
-        const weekEnd = Number(weekRange[1] ?? weekRange[0]); // 只有一周就设置end为start
-        const evenWeeks = (weekRangeStringSplit[1] === "(双)" || !weekRangeStringSplit[1]); // 双周 or 不分单双周
-        const oddWeeks = (weekRangeStringSplit[1] === "(单)" || !weekRangeStringSplit[1]); // 单周 or 不分单双周
-        for (let w = weekStart; w <= weekEnd; w++) { // 填充 weeks 的 start-end 之间
-            if ((!(w % 2) && evenWeeks) || ((w % 2) && oddWeeks)) weeks.push(w);
-        }
-    }
+    const weekStart = course.startWeek;
+    const weekEnd = course.endWeek;
+    for (let w = weekStart; w <= weekEnd; w++) weeks.push(w);
     return weeks;
 }
 
-function sectionsAnalyzer(sectionsString) { // eg: "1-4"
+function sectionsAnalyzer(course) {
     let sections = [];
-    const sectionRange = sectionsString.split("-");
-    const sectionStart = Number(sectionRange[0]);
-    const sectionEnd = Number(sectionRange[1] ?? sectionRange[0]); // 只有一节就设置end为start
-    for (let s = sectionStart; s <= sectionEnd; s++) {
-        sections.push({ "section": s });
-    }
+    const sectionStart = course.startNode;
+    const sectionEnd = course.startNode + course.step - 1;
+    for (let s = sectionStart; s <= sectionEnd; s++) sections.push({ "section": s });
     return sections;
 }
 
