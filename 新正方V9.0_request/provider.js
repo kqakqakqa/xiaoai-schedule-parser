@@ -1,8 +1,8 @@
 /* provider */
 async function scheduleHtmlProvider() {
-    document.getElementById("xiaoai-schedule-provider-log")?.remove();
-    document.body.innerHTML += "<div id='xiaoai-schedule-provider-log'></div>";
-    let messages = document.getElementById("xiaoai-schedule-provider-log");
+    const ajaxForm = document.querySelector("#ajaxForm");
+    const messages = document.createElement("div");
+    ajaxForm.append(messages);
     function LogToUser(msg) {
         console.log(msg);
         if (typeof msg === "string") {
@@ -24,67 +24,47 @@ async function scheduleHtmlProvider() {
         return copyButton;
     }
 
-    LogToUser("<input type='text' id='shareKey' placeholder='请输入分享口令'/><button id='submitShareKey'>继续</button><br />");
-    let shareKey = document.getElementById("shareKey");
-    let submitShareKey = document.getElementById("submitShareKey");
-    const shareCode = await new Promise(resolve => {
-        submitShareKey.addEventListener("click", () => resolve(shareKey.value), { once: true });
-    });
+
     LogToUser("开始获取课表<br />");
 
-    LogToUser("设置参数（url, headers）...");
-    const url = `https://i.wakeup.fun/share_schedule/get?key=${shareCode}`;
-    const headers = {
-        "User-Agent": "okhttp/3.14.9",
-        "Connection": "Keep-Alive",
-        "Accept-Encoding": "gzip",
-        "version": "243",
-    };
+    LogToUser("设置参数（url, params）...");
+    const url = "/jwglxt/kbcx/xskbcx_cxXsgrkb.html";
+    const params = `?xnm=${document.querySelector("#xnm").value}&xqm=${document.querySelector("#xqm").value}&kzlx=ck`;
     LogToUser("完成！<br />");
 
     LogToUser("发送获取数据请求（fetch），等待课表数据返回...");
-    const response = await fetch(url, { method: "GET", headers: headers });
-    const rawText = await response.text();
-    LogToUser("完成！长度" + rawText.length);
-    LogToUser(createCopyButton(rawText));
+    const json = await (await fetch(url + params)).text();
+    LogToUser("完成！长度" + json.length);
+    LogToUser(createCopyButton(json));
     LogToUser("<br />");
 
     LogToUser("识别课程表...");
-    const parsed = scheduleHtmlParser(rawText, LogToUser); // return rawText;
-    if (parsed !== "do not continue") {
-        LogToUser("完成！共" + JSON.parse(parsed).length + "节课");
-        LogToUser(createCopyButton(parsed));
-        LogToUser("<br /><br />");
+    const parsed = scheduleHtmlParser(json, LogToUser); // return json;
+    LogToUser("完成！共" + JSON.parse(parsed).length + "节课");
+    LogToUser(createCopyButton(parsed));
+    LogToUser("<br /><br />");
 
-        LogToUser("3秒后进入下一步");
-        await new Promise(e => setTimeout(e, 3000));
-    }
+    LogToUser("3秒后进入下一步");
+    await new Promise(e => setTimeout(e, 3000));
     return parsed;
 
     /* parser */
     function scheduleHtmlParser(html, LogToUser) {
         const maxCourses = 150;
-        const rawData = JSON.parse(html)?.data?.split("\n");
-        if (rawData.length !== 5) {
-            LogToUser("识别失败了...原因：返回的数据不符合预期格式。<br /><br />");
-            return "do not continue";
-        }
-        const rawTimes = JSON.parse(rawData[1]);
-        const rawCourseMaps = JSON.parse(rawData[3]);
-        const rawCourses = JSON.parse(rawData[4]);
-        LogToUser("读取到" + rawCourses.length + "节课");
+        const kbList = JSON.parse(html)["kbList"];
+        LogToUser("读取到" + kbList.length + "节课<br />");
+        // console.log(kbList)
 
         LogToUser("格式转换...");
         let courses = [];
-        for (const section of rawCourses) {
-            const name = rawCourseMaps.find(e => (e.id === section.id)).courseName;
+        for (const course of kbList) {
             courses.push({
-                name: name ?? "-", // 课程名称
-                position: section.room ?? "-", // 上课地点
-                teacher: section.teacher ?? "-", // 教师姓名
-                weeks: parseWeeks(section), // 上课周次（第几周）
-                day: section.day, // 星期几（的周几）
-                sections: parseSections(section) // 上课节次（的第几节）
+                name: course["kcmc"] ?? "-", // 课程名称
+                position: course["cdmc"] ?? "-", // 上课地点
+                teacher: course["xm"] ?? "-", // 教师姓名
+                weeks: parseWeeks(course["zcd"]), // 上课周次（第几周）
+                day: course["xqj"], // 星期几（的周几）
+                sections: parseSections(course["jcs"]) // 上课节次（的第几节）
             });
         }
         LogToUser("完成！转换了" + courses.length + "节课<br />");
@@ -112,23 +92,45 @@ async function scheduleHtmlProvider() {
 
         return JSON.stringify(courses4);
 
-        function parseWeeks(course) {
+        /**
+         * 新正方周次解析 v0.3.kqa
+         * @param {string} weeksString eg: "4-6周(双),7-11周,13周"
+         * @returns {number[]} eg: [4,6,7,8,9,10,11,13]
+         */
+        function parseWeeks(weeksString) {
             let weeks = [];
-            const weekStart = course.startWeek;
-            const weekEnd = course.endWeek;
-            for (let w = weekStart; w <= weekEnd; w++) weeks.push(w);
+            const weeksStringArray = weeksString.split(/[,，]/); // eg: ["4-6周(双)",...]
+            for (const weekRangeString of weeksStringArray) { // eg: "4-6周(双)"
+                const weekRangeStringSplit = weekRangeString.split("周"); // eg: ["4-6","(双)"]
+                const weekRange = weekRangeStringSplit[0].split("-"); // eg: ["4","6"]
+                const weekStart = parseInt(weekRange[0]);
+                const weekEnd = parseInt(weekRange[1] ?? weekRange[0]); // 只有一周就设置end为start
+                const evenWeeks = (weekRangeStringSplit[1] === "(双)" || !weekRangeStringSplit[1]); // 双周 or 不分单双周
+                const oddWeeks = (weekRangeStringSplit[1] === "(单)" || !weekRangeStringSplit[1]); // 单周 or 不分单双周
+                for (let w = weekStart; w <= weekEnd; w++) { // 填充 weeks 的 start-end 之间
+                    if ((!(w % 2) && evenWeeks) || ((w % 2) && oddWeeks)) weeks.push(w);
+                }
+            }
             return weeks;
         }
 
-        function parseSections(course) {
+        /**
+         * 新正方节次解析 v0.4.kqa
+         * @param {string} sectionsString eg: "1-4"
+         * @returns {number[]} eg: [1,2,3,4]
+         */
+        function parseSections(sectionsString) { // 
             let sections = [];
-            const sectionStart = course.startNode;
-            const sectionEnd = course.startNode + course.step - 1;
-            for (let s = sectionStart; s <= sectionEnd; s++) sections.push({ "section": s });
+            const range = sectionsString.split("-");
+            const start = parseInt(range[0]);
+            const end = parseInt(range[1] ?? range[0]); // 只有一节课则end=start
+            for (let s = start; s <= end; s++) {
+                sections.push(s);
+            }
             return sections;
         }
 
-        /* 通用课程表后处理 v0.1.kqa */
+        /* 通用课程表后处理 v0.2.kqa */
 
         function coursesResolveConflicts(courses) {
             let coursesOrdered = [];
@@ -140,8 +142,7 @@ async function scheduleHtmlProvider() {
                 for (const week of weeks) {
                     if (!coursesOrdered[week]) coursesOrdered[week] = [];
                     if (!coursesOrdered[week][day]) coursesOrdered[week][day] = [];
-                    for (const sectionJson of sections) {
-                        const section = sectionJson["section"];
+                    for (const section of sections) {
                         if (!coursesOrdered[week][day][section]) {
                             coursesOrdered[week][day][section] = {
                                 name: course["name"],
@@ -160,8 +161,8 @@ async function scheduleHtmlProvider() {
 
                     if (!changePointsOrdered[week]) changePointsOrdered[week] = [];
                     if (!changePointsOrdered[week][day]) changePointsOrdered[week][day] = [];
-                    const changePoint = sections[0]["section"];
-                    const nextChangePoint = sections[sections.length - 1]["section"] + 1;
+                    const changePoint = sections[0];
+                    const nextChangePoint = sections[sections.length - 1] + 1;
                     changePointsOrdered[week][day].push(changePoint);
                     changePointsOrdered[week][day].push(nextChangePoint);
                     changePointsOrdered[week][day] = Array.from(new Set(changePointsOrdered[week][day])).sort((a, b) => (a - b));
@@ -186,7 +187,7 @@ async function scheduleHtmlProvider() {
                         const courseOrdered = coursesOrdered[w][d][changePoint];
                         if (!courseOrdered) continue;
                         for (var s = changePoint; s < nextChangePoint; s++) {
-                            sections.push({ "section": s });
+                            sections.push(s);
                         }
                         coursesNoConflict.push({
                             name: courseOrdered["name"],

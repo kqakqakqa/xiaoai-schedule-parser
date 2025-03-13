@@ -1,130 +1,139 @@
 /* provider */
 async function scheduleHtmlProvider() {
-    document.getElementById("xiaoai-schedule-provider-log")?.remove();
-    document.body.innerHTML += "<div id='xiaoai-schedule-provider-log'></div>";
-    let messages = document.getElementById("xiaoai-schedule-provider-log");
+    let ajaxForm = document.querySelector("#ajaxForm");
+    let messages = document.createElement("div");
+    ajaxForm.append(messages);
     function LogToUser(msg) {
         console.log(msg);
-        if (typeof msg === "string") {
-            const element = document.createElement("div");
-            element.innerHTML = msg;
-            messages.append(...element.childNodes);
-        }
-        else {
-            messages.append(msg);
-        }
+        messages.innerHTML += msg.replaceAll("\n", "<br />");
     }
-    function createCopyButton(textToCopy) {
-        const copyButton = document.createElement("button");
-        copyButton.textContent = "点击复制";
-        copyButton.addEventListener("click", async e => {
-            await navigator.clipboard.writeText(textToCopy);
-            e.target.textContent = "已复制";
-        });
-        return copyButton;
-    }
+    LogToUser("开始获取课表\n");
 
-    LogToUser("<input type='text' id='shareKey' placeholder='请输入分享口令'/><button id='submitShareKey'>继续</button><br />");
-    let shareKey = document.getElementById("shareKey");
-    let submitShareKey = document.getElementById("submitShareKey");
-    const shareCode = await new Promise(resolve => {
-        submitShareKey.addEventListener("click", () => resolve(shareKey.value), { once: true });
-    });
-    LogToUser("开始获取课表<br />");
-
-    LogToUser("设置参数（url, headers）...");
-    const url = `https://i.wakeup.fun/share_schedule/get?key=${shareCode}`;
-    const headers = {
-        "User-Agent": "okhttp/3.14.9",
-        "Connection": "Keep-Alive",
-        "Accept-Encoding": "gzip",
-        "version": "243",
-    };
-    LogToUser("完成！<br />");
-
-    LogToUser("发送获取数据请求（fetch），等待课表数据返回...");
-    const response = await fetch(url, { method: "GET", headers: headers });
-    const rawText = await response.text();
-    LogToUser("完成！长度" + rawText.length);
-    LogToUser(createCopyButton(rawText));
-    LogToUser("<br />");
+    LogToUser("获取网页内容...");
+    const html = getAllHtml();
+    LogToUser("完成！长度" + html.length + "<button id='copyScheduleHtml'>点击复制</button>\n");
+    document.querySelector("#copyScheduleHtml").onclick = async () => await navigator.clipboard.writeText(html);
 
     LogToUser("识别课程表...");
-    const parsed = scheduleHtmlParser(rawText, LogToUser); // return rawText;
-    if (parsed !== "do not continue") {
-        LogToUser("完成！共" + JSON.parse(parsed).length + "节课");
-        LogToUser(createCopyButton(parsed));
-        LogToUser("<br /><br />");
-
-        LogToUser("3秒后进入下一步");
-        await new Promise(e => setTimeout(e, 3000));
-    }
+    const parsed = scheduleHtmlParser(html, LogToUser); // return html;
+    LogToUser("完成！共" + JSON.parse(parsed).length + "节课<button id='copySchedule'>点击复制</button>\n\n");
+    document.querySelector("#copySchedule").onclick = async () => await navigator.clipboard.writeText(parsed);
+    
+    LogToUser("3秒后进入下一步");
+    await new Promise(e => setTimeout(e, 3000));
     return parsed;
+
+    /* 递归获取所有html v0.1.kqa*/
+    function getAllHtml(iframeContent = "", frameContent = "") {
+        const iframes = document.querySelectorAll("iframe");
+        iframes.forEach(iframe => {
+            const dom = iframe.contentWindow.document;
+            iframeContent += getAllHtml(iframeContent, frameContent, dom);
+        });
+        const frames = document.querySelectorAll("frame");
+        frames.forEach(frame => {
+            const dom = frame.contentDocument.body.parentElement;
+            frameContent += getAllHtml(iframeContent, frameContent, dom);
+        });
+        if (iframes.length === 0 && frames.length === 0) {
+            return document.querySelector('body').outerHTML;
+        }
+        return document.querySelector('html').innerHTML + iframeContent + frameContent;
+    }
 
     /* parser */
     function scheduleHtmlParser(html, LogToUser) {
-        const maxCourses = 150;
-        const rawData = JSON.parse(html)?.data?.split("\n");
-        if (rawData.length !== 5) {
-            LogToUser("识别失败了...原因：返回的数据不符合预期格式。<br /><br />");
-            return "do not continue";
-        }
-        const rawTimes = JSON.parse(rawData[1]);
-        const rawCourseMaps = JSON.parse(rawData[3]);
-        const rawCourses = JSON.parse(rawData[4]);
-        LogToUser("读取到" + rawCourses.length + "节课");
-
-        LogToUser("格式转换...");
-        let courses = [];
-        for (const section of rawCourses) {
-            const name = rawCourseMaps.find(e => (e.id === section.id)).courseName;
-            courses.push({
-                name: name ?? "-", // 课程名称
-                position: section.room ?? "-", // 上课地点
-                teacher: section.teacher ?? "-", // 教师姓名
-                weeks: parseWeeks(section), // 上课周次（第几周）
-                day: section.day, // 星期几（的周几）
-                sections: parseSections(section) // 上课节次（的第几节）
+        let result = [];
+        LogToUser("解析" + kbList.length + "网页内容...\n");
+        const $ = cheerio.load(html, { decodeEntities: false });
+        // 列表模式，无需手动切换
+        const infos = $(html).find("#kblist_table > tbody:nth-child(n+2) > tr:nth-child(n+2) > td"); // 获取所有<td>，分星期&节次信息和课程信息两种
+        LogToUser("完成！\n格式转换...");
+        let currentDay, currentSections;
+        for (const info of infos) { // 星期&节次信息: id="jc_1-1-3", 课程信息: 无id
+            // 星期&节次信息
+            if ($(info).attr("id") !== undefined) {
+                // 更新星期&节次记忆
+                currentDay = parseInt($(info).attr("id").split(/[_-]/)[1]);
+                currentSections = parseSections($(info).text().replace(/^ *| *$/g, ""));
+                continue;
+            }
+            // 课程信息
+            const courseName = $(info).find(".title").first().text().replace(/^ *| *$/g, "");
+            const weeks = parseWeeks($(info).find(".timetable_con > p > font:nth-child(1)").first().text().replace(/周数 *[:：] *|^ *| *$/g, ""));
+            const positionRaw = $(info).find(".timetable_con > p > font:nth-child(2)").first().text().replace(/^ *| *$/g, "");
+            const position = positionRaw.replace(/校区 *[:：] *|上课地点 *[:：]|^ *| *$/g, "");
+            const teacher = $(info).find(".timetable_con > p > font:nth-child(3)").first().text().replace(/教师 *[:：]|^ *| *$/g, "");
+            //整合，输出
+            result.push({
+                name: courseName,
+                position: position,
+                teacher: teacher,
+                weeks: weeks,
+                day: currentDay,
+                sections: currentSections,
             });
         }
-        LogToUser("完成！转换了" + courses.length + "节课<br />");
-        // console.log(coursesRaw);
+        LogToUser("完成！转换了" + result.length + "节课\n");
+        // console.log(result);
 
         LogToUser("处理冲突课程...");
-        const courses1 = coursesResolveConflicts(courses);
-        LogToUser("完成！处理后还有" + courses1.length + "节课<br />");
+        const courses1 = coursesResolveConflicts(result);
+        LogToUser("完成！处理后还有" + courses1.length + "节课\n");
         // console.log(courses1);
 
         LogToUser("合并不同周的相同课程...");
         const courses2 = coursesMergeWeeks(courses1); // 合并不同周的相同课程
-        LogToUser("完成！合并后还有" + courses2.length + "节课<br />");
+        LogToUser("完成！合并后还有" + courses2.length + "节课\n");
         // console.log(courses2);
 
         LogToUser("合并不同教师的相同课程...");
         const courses3 = (courses2.length > maxCourses) ? coursesMergeTeachers(courses2) : courses2; //如果课太多，就合并不同教师的相同课程
-        LogToUser("完成！合并后还有" + courses3.length + "节课<br />");
+        LogToUser("完成！合并后还有" + courses3.length + "节课\n");
         // console.log(courses3);
 
         LogToUser("合并不同教室的相同课程...");
         const courses4 = (courses3.length > maxCourses) ? coursesMergeClassrooms(courses3) : courses3; //如果课太多，就合并不同教室的相同课程
-        LogToUser("完成！合并后还有" + courses4.length + "节课<br />");
+        LogToUser("完成！合并后还有" + courses4.length + "节课\n");
         // console.log(courses4);
 
         return JSON.stringify(courses4);
 
-        function parseWeeks(course) {
+        /**
+         * 新正方周次解析 v0.3.kqa
+         * @param {string} weeksString eg: "4-6周(双),7-11周,13周"
+         * @returns {number[]} eg: [4,6,7,8,9,10,11,13]
+         */
+        function parseWeeks(weeksString) {
             let weeks = [];
-            const weekStart = course.startWeek;
-            const weekEnd = course.endWeek;
-            for (let w = weekStart; w <= weekEnd; w++) weeks.push(w);
+            const weeksStringArray = weeksString.split(/[,，]/); // eg: ["4-6周(双)",...]
+            for (const weekRangeString of weeksStringArray) { // eg: "4-6周(双)"
+                const weekRangeStringSplit = weekRangeString.split("周"); // eg: ["4-6","(双)"]
+                const weekRange = weekRangeStringSplit[0].split("-"); // eg: ["4","6"]
+                const weekStart = parseInt(weekRange[0]);
+                const weekEnd = parseInt(weekRange[1] ?? weekRange[0]); // 只有一周就设置end为start
+                const evenWeeks = (weekRangeStringSplit[1] === "(双)" || !weekRangeStringSplit[1]); // 双周 or 不分单双周
+                const oddWeeks = (weekRangeStringSplit[1] === "(单)" || !weekRangeStringSplit[1]); // 单周 or 不分单双周
+                for (let w = weekStart; w <= weekEnd; w++) { // 填充 weeks 的 start-end 之间
+                    if ((!(w % 2) && evenWeeks) || ((w % 2) && oddWeeks)) weeks.push(w);
+                }
+            }
             return weeks;
         }
 
-        function parseSections(course) {
+        /**
+         * 新正方节次解析 v0.3.kqa
+         * @param {string} sectionsString eg: "1-4"
+         * @returns {object[]} eg: [{ "section": 1 }, { "section": 2 }, { "section": 3 }, { "section": 4 }]
+         */
+        function parseSections(sectionsString) { // 
             let sections = [];
-            const sectionStart = course.startNode;
-            const sectionEnd = course.startNode + course.step - 1;
-            for (let s = sectionStart; s <= sectionEnd; s++) sections.push({ "section": s });
+            const range = sectionsString.split("-");
+            const start = parseInt(range[0]);
+            const end = parseInt(range[1] ?? range[0]); // 只有一节课则end=start
+            for (let s = start; s <= end; s++) {
+                sections.push(s);
+            }
             return sections;
         }
 
