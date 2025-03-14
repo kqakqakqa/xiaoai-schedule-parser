@@ -1,6 +1,6 @@
 /**
  * parser
- * @param {string} jsonString 课程表数组字符串
+ * @param {string} providerRes 课程表数组字符串
  * @returns {{
  *   name: string,
  *   position: string,
@@ -10,6 +10,6 @@
  *   sections: number[],
  * }[]} 课程表数组
  */
-function scheduleHtmlParser(jsonString) {
-    return JSON.parse(jsonString);
+function scheduleHtmlParser(providerRes) {
+  return JSON.parse(providerRes).schedule;
 }

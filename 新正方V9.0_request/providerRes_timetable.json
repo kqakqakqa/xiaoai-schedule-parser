@@ -1,0 +1,48 @@
+[
+  {
+    "date": "...",
+    "dateDigit": "...",
+    "dateDigitSeparator": "...",
+    "day": "...",
+    "jcmc": "...",
+    "jgpxzd": "...",
+    "jssj": "...",
+    "listnav": "...",
+    "localeKey": "...",
+    "month": "...",
+    "pageTotal": 0,
+    "pageable": true,
+    "qssj": "...",
+    "queryModel": {
+      "currentPage": 1,
+      "currentResult": 0,
+      "entityOrField": false,
+      "limit": 15,
+      "offset": 0,
+      "pageNo": 0,
+      "pageSize": 15,
+      "showCount": 10,
+      "sorts": [],
+      "totalCount": 0,
+      "totalPage": 0,
+      "totalResult": 0
+    },
+    "rangeable": true,
+    "rsdm": "...",
+    "rsdmc": "...",
+    "rsdzjs": 0,
+    "totalResult": "...",
+    "userModel": {
+      "monitor": false,
+      "roleCount": 0,
+      "roleKeys": "...",
+      "roleValues": "...",
+      "status": 0,
+      "usable": false
+    },
+    "year": "..."
+  },
+  {
+    "...": "..."
+  }
+]
