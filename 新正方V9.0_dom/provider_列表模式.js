@@ -18,7 +18,7 @@ async function scheduleHtmlProvider() {
   const parsed = scheduleHtmlParser(html, LogToUser); // return html;
   LogToUser("完成！共" + JSON.parse(parsed).length + "节课<button id='copySchedule'>点击复制</button>\n\n");
   document.querySelector("#copySchedule").onclick = async () => await navigator.clipboard.writeText(parsed);
-  
+
   LogToUser("3秒后进入下一步");
   await new Promise(e => setTimeout(e, 3000));
   return parsed;
@@ -100,21 +100,22 @@ async function scheduleHtmlProvider() {
     return JSON.stringify(courses4);
 
     /**
-     * 新正方周次解析 v0.3.kqa
+     * 新正方周次解析 请勿直接在此处修改函数内容
+     * @version 0.5.02ba968
      * @param {string} weeksString eg: "4-6周(双),7-11周,13周"
      * @returns {number[]} eg: [4,6,7,8,9,10,11,13]
      */
-    function parseWeeks(weeksString) {
+    function parseWeeks(weeksString) { // unresolved: weeksString识别失败时的输出; 如果格式是"第1-5周,7周单,9-12周双"怎么办
       let weeks = [];
-      const weeksStringArray = weeksString.split(/[,，]/); // eg: ["4-6周(双)",...]
-      for (const weekRangeString of weeksStringArray) { // eg: "4-6周(双)"
-        const weekRangeStringSplit = weekRangeString.split("周"); // eg: ["4-6","(双)"]
-        const weekRange = weekRangeStringSplit[0].split("-"); // eg: ["4","6"]
-        const weekStart = parseInt(weekRange[0]);
-        const weekEnd = parseInt(weekRange[1] ?? weekRange[0]); // 只有一周就设置end为start
-        const evenWeeks = (weekRangeStringSplit[1] === "(双)" || !weekRangeStringSplit[1]); // 双周 or 不分单双周
-        const oddWeeks = (weekRangeStringSplit[1] === "(单)" || !weekRangeStringSplit[1]); // 单周 or 不分单双周
-        for (let w = weekStart; w <= weekEnd; w++) { // 填充 weeks 的 start-end 之间
+      const ranges = weeksString.split(/[,，]/); // eg: ["4-6周(双)",...]
+      for (const rangeWithLabel of ranges) { // eg: "4-6周(双)"
+        const [rangeString, oddEvenLabel] = rangeWithLabel.split("周"); // eg: ["4-6","(双)"]
+        const range = rangeString.split("-"); // eg: ["4","6"]
+        const start = parseInt(range[0]);
+        const end = parseInt(range[1] ?? range[0]); // 只有一周就设置end为start
+        const evenWeeks = (oddEvenLabel === "(双)" || !oddEvenLabel); // 双周 or 不分单双周
+        const oddWeeks = (oddEvenLabel === "(单)" || !oddEvenLabel); // 单周 or 不分单双周
+        for (let w = start; w <= end; w++) { // 填充 weeks 的 start-end 之间
           if ((!(w % 2) && evenWeeks) || ((w % 2) && oddWeeks)) weeks.push(w);
         }
       }
@@ -122,13 +123,14 @@ async function scheduleHtmlProvider() {
     }
 
     /**
-     * 新正方节次解析 v0.3.kqa
+     * 新正方节次解析 请勿直接在此处修改函数内容
+     * @version 0.5.02ba968
      * @param {string} sectionsString eg: "1-4"
-     * @returns {object[]} eg: [{ "section": 1 }, { "section": 2 }, { "section": 3 }, { "section": 4 }]
+     * @returns {number[]} eg: [1,2,3,4]
      */
-    function parseSections(sectionsString) { // 
+    function parseSections(sectionsString) { // unresolved: sectionsString识别失败时的输出; 如果格式是"1-4节,6-8节"怎么办
       let sections = [];
-      const range = sectionsString.split("-");
+      const range = sectionsString.replace(/节$/g, "").split("-"); // 以防万一存在"节"
       const start = parseInt(range[0]);
       const end = parseInt(range[1] ?? range[0]); // 只有一节课则end=start
       for (let s = start; s <= end; s++) {
@@ -137,7 +139,7 @@ async function scheduleHtmlProvider() {
       return sections;
     }
 
-    /* 通用课程表后处理 v0.1.kqa */
+    /* 通用课程表后处理 v0.2.kqa */
 
     function coursesResolveConflicts(courses) {
       let coursesOrdered = [];
@@ -149,8 +151,7 @@ async function scheduleHtmlProvider() {
         for (const week of weeks) {
           if (!coursesOrdered[week]) coursesOrdered[week] = [];
           if (!coursesOrdered[week][day]) coursesOrdered[week][day] = [];
-          for (const sectionJson of sections) {
-            const section = sectionJson["section"];
+          for (const section of sections) {
             if (!coursesOrdered[week][day][section]) {
               coursesOrdered[week][day][section] = {
                 name: course["name"],
@@ -169,8 +170,8 @@ async function scheduleHtmlProvider() {
 
           if (!changePointsOrdered[week]) changePointsOrdered[week] = [];
           if (!changePointsOrdered[week][day]) changePointsOrdered[week][day] = [];
-          const changePoint = sections[0]["section"];
-          const nextChangePoint = sections[sections.length - 1]["section"] + 1;
+          const changePoint = sections[0];
+          const nextChangePoint = sections[sections.length - 1] + 1;
           changePointsOrdered[week][day].push(changePoint);
           changePointsOrdered[week][day].push(nextChangePoint);
           changePointsOrdered[week][day] = Array.from(new Set(changePointsOrdered[week][day])).sort((a, b) => (a - b));
@@ -195,7 +196,7 @@ async function scheduleHtmlProvider() {
             const courseOrdered = coursesOrdered[w][d][changePoint];
             if (!courseOrdered) continue;
             for (var s = changePoint; s < nextChangePoint; s++) {
-              sections.push({ "section": s });
+              sections.push(s);
             }
             coursesNoConflict.push({
               name: courseOrdered["name"],

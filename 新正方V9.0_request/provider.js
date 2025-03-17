@@ -114,7 +114,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
       "x-requested-with": "XMLHttpRequest"
     },
-    body: new URLSearchParams({
+    body: new URLSearchParams({ // unresolved: 获取失败时的处理
       xnm: document.querySelector("#xnm").value, // 学年
       xqm: document.querySelector("#xqm").value, // 学期
       kzlx: "ck",
@@ -127,7 +127,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   logFrame.logToUser("<br />");
 
   logFrame.logToUser("识别课程表...");
-  const parserRes = parserInProvider(providerRes_schedule, logFrame.logToUser); // return json;
+  const parserRes = parserInProvider(providerRes_schedule, logFrame.logToUser);
   logFrame.logToUser("完成！共" + parserRes.length + "门课");
   logFrame.logToUser(createCopyButton(JSON.stringify(parserRes)));
   logFrame.logToUser("<br />");
@@ -140,7 +140,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
       "x-requested-with": "XMLHttpRequest"
     },
-    body: new URLSearchParams({
+    body: new URLSearchParams({ // unresolved: 获取失败时的处理
       xnm: document.querySelector("#xnm").value, // 学年
       xqm: document.querySelector("#xqm").value, // 学期
       xqh_id: getXqhId(providerRes_schedule), // 校区号
@@ -152,8 +152,9 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   logFrame.logToUser("<br />");
 
   logFrame.logToUser("识别时间表...");
-  const timerRes = timerInProvider({ providerRes: providerRes_timetable }, logFrame.logToUser); // return json;
-  logFrame.logToUser("完成！共" + timerRes.sections.length + "节课");
+  const timerRes = timerInProvider({ providerRes: providerRes_timetable }, logFrame.logToUser);
+  if (timerRes?.sections) { logFrame.logToUser("完成！共" + timerRes.sections.length + "节课"); }
+  else { logFrame.logToUser("完成！时间表为空，使用默认配置"); }
   logFrame.logToUser(createCopyButton(JSON.stringify(timerRes)));
   logFrame.logToUser("<br />");
 
@@ -161,20 +162,15 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   await new Promise(e => setTimeout(e, 3000));
   return JSON.stringify({ schedule: parserRes, timetable: timerRes });
 
-  function getXqhId(json) {
-    const kbList = JSON.parse(json)["kbList"]; // 从课表中获取xqh_id
+  function getXqhId(jsonString) { // unresolved: jsonString为非预期内容(如空字符串或html格式报错)时的处理, 同下parserInProvider
+    const kbList = JSON.parse(jsonString).kbList; // 从课表中获取xqh_id
     const countMap = {};
-    kbList.forEach(item => { // 找到出现次数最多的xqh_id
-      countMap[item.xqh_id] = (countMap[item.xqh_id] ?? 0) + 1;
-    });
-    let maxXqhId = null;
-    let maxCount = 0;
-    for (const [xqh_id, count] of Object.entries(countMap)) {
-      if (count > maxCount) {
-        maxXqhId = xqh_id;
-        maxCount = count;
-      }
-    }
+    for (const course of kbList) { // 统计各xqh_id出现次数
+      countMap[course.xqh_id] = (countMap[course.xqh_id] ?? 0) + 1;
+    };
+    const [maxXqhId,] = Object.entries(countMap).sort(
+      ([, value1], [, value2]) => (value2 - value1)
+    )[0]; // 找到出现次数最多的xqh_id
     return maxXqhId;
   }
 
@@ -194,26 +190,26 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
    */
   function parserInProvider(jsonString, logToUser) {
     const maxCourses = 150;
-    const kbList = JSON.parse(jsonString)["kbList"];
+    const kbList = JSON.parse(jsonString).kbList; // unresolved: jsonString为非预期内容(如空字符串或html格式报错)时的处理
     logToUser("读取到" + kbList.length + "门课<br />");
     // console.log(kbList)
 
     logToUser("格式转换...");
     let courses = [];
-    for (const course of kbList) {
+    for (const course of kbList) { // unresolved: course为非预期类型(如null)时的处理
       courses.push({
-        name: course["kcmc"] ?? "-", // 课程名称
-        position: course["cdmc"] ?? "-", // 上课地点
-        teacher: course["xm"] ?? "-", // 教师姓名
-        weeks: parseWeeks(course["zcd"]), // 上课周次（第几周）
-        day: course["xqj"], // 星期几（的周几）
-        sections: parseSections(course["jcs"]) // 上课节次（的第几节）
+        name: course.kcmc ?? "-", // 课程名称 // unresolved: 能不能是""?
+        position: course.cdmc ?? "-", // 上课地点
+        teacher: course.xm ?? "-", // 教师姓名
+        weeks: parseWeeks(course.zcd), // 上课周次（第几周）
+        day: course.xqj, // 星期几（的周几）
+        sections: parseSections(course.jcs) // 上课节次（的第几节）
       });
     }
     logToUser("完成！转换了" + courses.length + "门课<br />");
     // console.log(coursesRaw);
 
-    logToUser("处理冲突课程...");
+    logToUser("处理冲突课程..."); // unresolved: course1~course4有效性检验, 是否非预期值?
     const courses1 = coursesResolveConflicts(courses);
     logToUser("完成！处理后还有" + courses1.length + "门课<br />");
     // console.log(courses1);
@@ -236,21 +232,22 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     return courses4;
 
     /**
-     * 新正方周次解析 v0.3.kqa
+     * 新正方周次解析 请勿直接在此处修改函数内容
+     * @version 0.5.02ba968
      * @param {string} weeksString eg: "4-6周(双),7-11周,13周"
      * @returns {number[]} eg: [4,6,7,8,9,10,11,13]
      */
-    function parseWeeks(weeksString) {
+    function parseWeeks(weeksString) { // unresolved: weeksString识别失败时的输出; 如果格式是"第1-5周,7周单,9-12周双"怎么办
       let weeks = [];
-      const weeksStringArray = weeksString.split(/[,，]/); // eg: ["4-6周(双)",...]
-      for (const weekRangeString of weeksStringArray) { // eg: "4-6周(双)"
-        const weekRangeStringSplit = weekRangeString.split("周"); // eg: ["4-6","(双)"]
-        const weekRange = weekRangeStringSplit[0].split("-"); // eg: ["4","6"]
-        const weekStart = parseInt(weekRange[0]);
-        const weekEnd = parseInt(weekRange[1] ?? weekRange[0]); // 只有一周就设置end为start
-        const evenWeeks = (weekRangeStringSplit[1] === "(双)" || !weekRangeStringSplit[1]); // 双周 or 不分单双周
-        const oddWeeks = (weekRangeStringSplit[1] === "(单)" || !weekRangeStringSplit[1]); // 单周 or 不分单双周
-        for (let w = weekStart; w <= weekEnd; w++) { // 填充 weeks 的 start-end 之间
+      const ranges = weeksString.split(/[,，]/); // eg: ["4-6周(双)",...]
+      for (const rangeWithLabel of ranges) { // eg: "4-6周(双)"
+        const [rangeString, oddEvenLabel] = rangeWithLabel.split("周"); // eg: ["4-6","(双)"]
+        const range = rangeString.split("-"); // eg: ["4","6"]
+        const start = parseInt(range[0]);
+        const end = parseInt(range[1] ?? range[0]); // 只有一周就设置end为start
+        const evenWeeks = (oddEvenLabel === "(双)" || !oddEvenLabel); // 双周 or 不分单双周
+        const oddWeeks = (oddEvenLabel === "(单)" || !oddEvenLabel); // 单周 or 不分单双周
+        for (let w = start; w <= end; w++) { // 填充 weeks 的 start-end 之间
           if ((!(w % 2) && evenWeeks) || ((w % 2) && oddWeeks)) weeks.push(w);
         }
       }
@@ -258,13 +255,14 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     }
 
     /**
-     * 新正方节次解析 v0.4.kqa
+     * 新正方节次解析 请勿直接在此处修改函数内容
+     * @version 0.5.02ba968
      * @param {string} sectionsString eg: "1-4"
      * @returns {number[]} eg: [1,2,3,4]
      */
-    function parseSections(sectionsString) { // 
+    function parseSections(sectionsString) { // unresolved: sectionsString识别失败时的输出; 如果格式是"1-4节,6-8节"怎么办
       let sections = [];
-      const range = sectionsString.split("-");
+      const range = sectionsString.replace(/节$/g, "").split("-"); // 以防万一存在"节"
       const start = parseInt(range[0]);
       const end = parseInt(range[1] ?? range[0]); // 只有一节课则end=start
       for (let s = start; s <= end; s++) {
@@ -273,31 +271,32 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       return sections;
     }
 
-    /* 通用课程表后处理 v0.2.kqa */
+    /* 通用课程表后处理 v local 请勿直接在此处修改函数内容 */
 
     function coursesResolveConflicts(courses) {
+      const separator = "&";
       let coursesOrdered = [];
       let changePointsOrdered = [];
       for (const course of courses) {
-        const weeks = course["weeks"];
-        const day = course["day"];
-        const sections = course["sections"];
+        const weeks = course.weeks;
+        const day = course.day;
+        const sections = course.sections;
         for (const week of weeks) {
           if (!coursesOrdered[week]) coursesOrdered[week] = [];
           if (!coursesOrdered[week][day]) coursesOrdered[week][day] = [];
           for (const section of sections) {
             if (!coursesOrdered[week][day][section]) {
               coursesOrdered[week][day][section] = {
-                name: course["name"],
-                position: course["position"],
-                teacher: course["teacher"]
+                name: course.name,
+                position: course.position,
+                teacher: course.teacher,
               };
             }
             else {
               coursesOrdered[week][day][section] = {
-                name: `${coursesOrdered[week][day][section]["name"]}&${course["name"]}`,
-                position: `${coursesOrdered[week][day][section]["position"]}&${course["position"]}`,
-                teacher: `${coursesOrdered[week][day][section]["teacher"]}&${course["teacher"]}`
+                name: "" + coursesOrdered[week][day][section].name + separator + course.name,
+                position: "" + coursesOrdered[week][day][section].position + separator + course.position,
+                teacher: "" + coursesOrdered[week][day][section].teacher + separator + course.teacher,
               };
             }
           }
@@ -333,9 +332,9 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
               sections.push(s);
             }
             coursesNoConflict.push({
-              name: courseOrdered["name"],
-              position: courseOrdered["position"],
-              teacher: courseOrdered["teacher"],
+              name: courseOrdered.name,
+              position: courseOrdered.position,
+              teacher: courseOrdered.teacher,
               weeks: [w],
               day: d,
               sections: sections
@@ -352,14 +351,14 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
         if (!coursesNew[c]) continue;
         for (let cc = c + 1; cc < coursesNew.length; cc++) {
           if (coursesNew[cc]
-            && coursesNew[cc]["name"] === coursesNew[c]["name"]
-            && coursesNew[cc]["sections"].length === coursesNew[c]["sections"].length
-            && coursesNew[cc]["sections"][0]["section"] === coursesNew[c]["sections"][0]["section"]
-            && coursesNew[cc]["day"] === coursesNew[c]["day"]
-            && coursesNew[cc]["position"] === coursesNew[c]["position"]
-            && coursesNew[cc]["teacher"] === coursesNew[c]["teacher"]) {
+            && coursesNew[cc].name === coursesNew[c].name
+            && coursesNew[cc].sections.length === coursesNew[c].sections.length
+            && coursesNew[cc].sections[0].section === coursesNew[c].sections[0].section
+            && coursesNew[cc].day === coursesNew[c].day
+            && coursesNew[cc].position === coursesNew[c].position
+            && coursesNew[cc].teacher === coursesNew[c].teacher) {
             // console.log("周合并\n" + JSON.stringify(coursesNew[cc]) + "\n" + JSON.stringify(coursesNew[c]));
-            coursesNew[c]["weeks"] = coursesNew[c]["weeks"].concat(coursesNew[cc]["weeks"]);
+            coursesNew[c].weeks = coursesNew[c].weeks.concat(coursesNew[cc].weeks);
             coursesNew.splice(cc, 1);
             // console.log("合并后" + JSON.stringify(coursesNew[c]));
           }
@@ -374,14 +373,14 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
         if (!coursesNew[c]) continue;
         for (let cc = c + 1; cc < coursesNew.length; cc++) {
           if (coursesNew[cc]
-            && coursesNew[cc]["name"] === coursesNew[c]["name"]
-            && coursesNew[cc]["sections"].length === coursesNew[c]["sections"].length
-            && coursesNew[cc]["sections"][0]["section"] === coursesNew[c]["sections"][0]["section"]
-            && coursesNew[cc]["day"] === coursesNew[c]["day"]
-            && coursesNew[cc]["position"] === coursesNew[c]["position"]) {
+            && coursesNew[cc].name === coursesNew[c].name
+            && coursesNew[cc].sections.length === coursesNew[c].sections.length
+            && coursesNew[cc].sections[0].section === coursesNew[c].sections[0].section
+            && coursesNew[cc].day === coursesNew[c].day
+            && coursesNew[cc].position === coursesNew[c].position) {
             // console.log("教师合并\n" + JSON.stringify(coursesNew[cc]) + "\n" + JSON.stringify(coursesNew[c]));
-            coursesNew[c]["teacher"] = (coursesNew[c]["teacher"].match(/^[0-9,]{1,}周:/) ? coursesNew[c]["teacher"] : (coursesNew[c]["weeks"].join(",") + "周:") + coursesNew[c]["teacher"]) + " " + (coursesNew[cc]["weeks"].join(",") + "周:" + coursesNew[cc]["teacher"]);
-            coursesNew[c]["weeks"] = coursesNew[c]["weeks"].concat(coursesNew[cc]["weeks"]);
+            coursesNew[c].teacher = (coursesNew[c].teacher.match(/^[0-9,]{1,}周:/) ? coursesNew[c].teacher : (coursesNew[c].weeks.join(",") + "周:") + coursesNew[c].teacher) + " " + (coursesNew[cc].weeks.join(",") + "周:" + coursesNew[cc].teacher);
+            coursesNew[c].weeks = coursesNew[c].weeks.concat(coursesNew[cc].weeks);
             coursesNew.splice(cc, 1);
             // console.log("合并后\n" + JSON.stringify(coursesNew[c]));
           }
@@ -398,14 +397,14 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
         if (!coursesNew[c]) continue;
         for (let cc = c + 1; cc < coursesNew.length; cc++) {
           if (coursesNew[cc]
-            && coursesNew[cc]["name"] === coursesNew[c]["name"]
-            && coursesNew[cc]["sections"].length === coursesNew[c]["sections"].length
-            && coursesNew[cc]["sections"][0]["section"] === coursesNew[c]["sections"][0]["section"]
-            && coursesNew[cc]["day"] === coursesNew[c]["day"]) {
+            && coursesNew[cc].name === coursesNew[c].name
+            && coursesNew[cc].sections.length === coursesNew[c].sections.length
+            && coursesNew[cc].sections[0].section === coursesNew[c].sections[0].section
+            && coursesNew[cc].day === coursesNew[c].day) {
             // console.log("教室合并\n" + JSON.stringify(coursesNew[cc]) + "\n" + JSON.stringify(coursesNew[c]));
-            coursesNew[c]["position"] = (coursesNew[c]["position"].match(/^[0-9,]{1,}周:/) ? coursesNew[c]["position"] : (coursesNew[c]["weeks"].join(",") + "周:") + coursesNew[c]["position"]) + " " + (coursesNew[cc]["weeks"].join(",") + "周:" + coursesNew[cc]["position"]);
-            coursesNew[c]["teacher"] = (coursesNew[c]["teacher"].match(/^[0-9,]{1,}周:/) ? coursesNew[c]["teacher"] : (coursesNew[c]["weeks"].join(",") + "周:") + coursesNew[c]["teacher"]) + " " + (coursesNew[cc]["weeks"].join(",") + "周:" + coursesNew[cc]["teacher"]);
-            coursesNew[c]["weeks"] = coursesNew[c]["weeks"].concat(coursesNew[cc]["weeks"]);
+            coursesNew[c].position = (coursesNew[c].position.match(/^[0-9,]{1,}周:/) ? coursesNew[c].position : (coursesNew[c].weeks.join(",") + "周:") + coursesNew[c].position) + " " + (coursesNew[cc].weeks.join(",") + "周:" + coursesNew[cc].position);
+            coursesNew[c].teacher = (coursesNew[c].teacher.match(/^[0-9,]{1,}周:/) ? coursesNew[c].teacher : (coursesNew[c].weeks.join(",") + "周:") + coursesNew[c].teacher) + " " + (coursesNew[cc].weeks.join(",") + "周:" + coursesNew[cc].teacher);
+            coursesNew[c].weeks = coursesNew[c].weeks.concat(coursesNew[cc].weeks);
             coursesNew.splice(cc, 1);
             // console.log("合并后\n" + JSON.stringify(coursesNew[c]));
           }
@@ -456,11 +455,11 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     logToUser("格式转换...");
     for (const time of providerRes_timetable) {
       timetable.sections.push({
-        section: parseInt(time["jcmc"]),
-        startTime: time["qssj"],
-        endTime: time["jssj"],
+        section: parseInt(time.jcmc),
+        startTime: time.qssj,
+        endTime: time.jssj,
       });
-      switch (time["rsdmc"]) {
+      switch (time.rsdmc) {
         case "上午":
           timetable.forenoon++;
           break;
