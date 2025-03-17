@@ -1,9 +1,10 @@
 /**
  * 新正方周次解析
+ * @version 0.5
  * @param {string} weeksString eg: "4-6周(双),7-11周,13周"
  * @returns {number[]} eg: [4,6,7,8,9,10,11,13]
  */
-function parseWeeks(weeksString) {
+function parseWeeks(weeksString) { // unresolved: weeksString识别失败时的输出; 如果格式是"第1-5周,7周单,9-12周双"怎么办
   let weeks = [];
   const ranges = weeksString.split(/[,，]/); // eg: ["4-6周(双)",...]
   for (const rangeWithLabel of ranges) { // eg: "4-6周(双)"
