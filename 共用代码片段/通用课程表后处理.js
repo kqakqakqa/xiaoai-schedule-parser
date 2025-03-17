@@ -1,99 +1,9 @@
-/* 通用课程表后处理 v0.3 */
+/* 通用课程表后处理 v0.4 */
 
 // unresolved: courses有效性校验(key是否存在, value是否格式匹配, number[]是否按顺序)
 function coursesCheck(courses) {
 
 }
-
-// 合并重复课程
-// function coursesMergeSame(courses) {
-//   let courseMap = {};
-//   for (const course of courses) {
-//     for (const week of course.weeks) { // 拆成多门单周课
-//       const key = JSON.stringify({ // 除了sections需要合并
-//         name: course.name,
-//         position: course.position,
-//         teacher: course.teacher,
-//         day: course.day,
-//         weeks: [week],
-//       });
-//       if (!courseMap[key]) {
-//         courseMap[key] = new Set(); // 防止section重复
-//       }
-//       for (const section of course.sections) { // 合并sections
-//         courseMap[key].add(section);
-//       }
-//     }
-//   }
-
-//   let coursesMerged = [];
-//   for (const [key, set] of Object.entries(courseMap)) { // sections转换回array
-//     let course = JSON.parse(key);
-//     const sections = Array.from(set).sort((a, b) => a - b);
-//     course.sections = sections;
-//   }
-//   return coursesMerged;
-// }
-
-// 合并重复&冲突课程
-// function coursesMergeConflictsAndDuplicates(courses, separator = "&") {
-//   let courseMap = {};
-//   for (const course of courses) {
-//     for (const week of course.weeks) {
-//       for (const section of course.sections) { // 拆成多门单周、单节课
-//         const key = JSON.stringify({ // weeks day sections相同即为重复或冲突课程
-//           weeks: [week],
-//           day: course.day,
-//           sections: [section],
-//         });
-//         const value = JSON.stringify({
-//           name: course.name,
-//           position: course.position,
-//           teacher: course.teacher,
-//         });
-//         if (!courseMap[key]) courseMap[key] = new Set(); // 重复name position teacher会自动合并, 剩下的都是冲突课程
-//         courseMap[key].add(value);
-//       }
-//     }
-//   }
-
-//   let courseMap2 = {};
-//   for (const [key, valueSet] of Object.entries(courseMap)) {
-//     const { day, weeks, sections } = JSON.parse(key);
-
-//     // 冲突课程name position teacher合并
-//     const valueArray = Array.from(valueSet);
-//     let nameMerged = [];
-//     let positionMerged = [];
-//     let teacherMerged = [];
-//     for (const str of valueArray) {
-//       const { name, position, teacher } = JSON.parse(str);
-//       nameMerged.push(name);
-//       positionMerged.push(position);
-//       teacherMerged.push(teacher);
-//     }
-//     const name = nameMerged.join(separator);
-//     const position = positionMerged.join(separator);
-//     const teacher = teacherMerged.join(separator);
-
-//     // 各section的相同课程合并为连续节数
-//     const course = {
-//       name: name,
-//       position: position,
-//       teacher: teacher,
-//       weeks: weeks,
-//       day: day,
-//     }
-//     const key2 = JSON.stringify(course); // name position teacher weeks day相同即为相同课程
-//     course.sections = sections;
-//     if (!courseMap2[key2]) { courseMap2[key2] = course }
-//     else {
-//       courseMap2[key2].sections = Array.from(new Set(courseMap2[key2].sections.concat(course.sections))).sort((a, b) => a - b); // sections合并, 去重, 排序
-//     }
-//   }
-
-//   return Object.values(courseMap2);
-// }
 
 // 合并重复&冲突课程
 function coursesMergeConflictsAndDuplicates(courses, separator = "&") {
@@ -155,102 +65,6 @@ function coursesMergeConflictsAndDuplicates(courses, separator = "&") {
   return Object.values(courseMap2);
 }
 
-// 合并冲突课程
-// function coursesMergeConflictsAndDuplicates(courses) {
-//   const separator = "&";
-//   let coursesOrdered = [];
-//   let changePointsOrdered = [];
-//   for (const course of courses) {
-//     const weeks = course.weeks ?? [];
-//     const day = course.day ?? [];
-//     const sections = course.sections ?? "";
-//     for (const week of weeks) {
-//       if (!coursesOrdered[week]) coursesOrdered[week] = [];
-//       if (!coursesOrdered[week][day]) coursesOrdered[week][day] = [];
-//       for (const section of sections) {
-//         if (!coursesOrdered[week][day][section]) {
-//           coursesOrdered[week][day][section] = {
-//             name: course.name,
-//             position: course.position,
-//             teacher: course.teacher,
-//           };
-//         }
-//         else {
-//           coursesOrdered[week][day][section] = {
-//             name: coursesOrdered[week][day][section].name + separator + course.name,
-//             position: coursesOrdered[week][day][section].position + separator + course.position,
-//             teacher: coursesOrdered[week][day][section].teacher + separator + course.teacher,
-//           };
-//         }
-//       }
-
-//       if (!changePointsOrdered[week]) changePointsOrdered[week] = [];
-//       if (!changePointsOrdered[week][day]) changePointsOrdered[week][day] = [];
-//       const changePoint = sections[0];
-//       const nextChangePoint = sections[sections.length - 1] + 1;
-//       changePointsOrdered[week][day].push(changePoint);
-//       changePointsOrdered[week][day].push(nextChangePoint);
-//       changePointsOrdered[week][day] = Array.from(new Set(changePointsOrdered[week][day])).sort((a, b) => (a - b));
-//     }
-//   }
-
-//   // console.log(coursesOrdered);
-//   // console.log(changePointsOrdered);
-
-//   let coursesMerged = [];
-//   for (let w = 1; w < coursesOrdered.length; w++) {
-//     if (!coursesOrdered[w]) continue;
-//     for (let d = 1; d < coursesOrdered[w].length; d++) {
-//       const changePointsDay = changePointsOrdered[w][d];
-//       if (!changePointsDay) continue;
-
-//       for (let ckpt = 0; ckpt < changePointsDay.length - 1; ckpt++) {
-//         let sections = [];
-//         const changePoint = changePointsOrdered[w][d][ckpt];
-//         const nextChangePoint = changePointsOrdered[w][d][ckpt + 1];
-//         // if (changePoint === nextChangePoint) continue;
-//         const courseOrdered = coursesOrdered[w][d][changePoint];
-//         if (!courseOrdered) continue;
-//         for (var s = changePoint; s < nextChangePoint; s++) {
-//           sections.push(s);
-//         }
-//         coursesMerged.push({
-//           name: courseOrdered.name,
-//           position: courseOrdered.position,
-//           teacher: courseOrdered.teacher,
-//           weeks: [w],
-//           day: d,
-//           sections: sections
-//         })
-//       }
-//     }
-//   }
-//   return coursesMerged;
-// }
-
-// 合并不同周数的相同课程
-// function coursesMergeWeeks(courses) {
-//   let coursesNew = JSON.parse(JSON.stringify(courses));
-//   for (let c = 0; c < coursesNew.length; c++) {
-//     if (!coursesNew[c]) continue;
-//     for (let cc = c + 1; cc < coursesNew.length; cc++) {
-//       if (coursesNew[cc]
-//         && coursesNew[cc].name === coursesNew[c].name
-//         && coursesNew[cc].sections.length === coursesNew[c].sections.length
-//         && coursesNew[cc].sections[0] === coursesNew[c].sections[0]
-//         && coursesNew[cc].day === coursesNew[c].day
-//         && coursesNew[cc].position === coursesNew[c].position
-//         && coursesNew[cc].teacher === coursesNew[c].teacher) {
-//         // console.log("周合并\n" + JSON.stringify(coursesNew[cc]) + "\n" + JSON.stringify(coursesNew[c]));
-//         coursesNew[c].weeks = coursesNew[c].weeks.concat(coursesNew[cc].weeks);
-//         coursesNew.splice(cc, 1);
-//         // console.log("合并后" + JSON.stringify(coursesNew[c]));
-//       }
-//     }
-//   }
-//   return coursesNew;
-// }
-
 // 合并不同周数的相同课程
 function coursesMergeWeeks(courses) {
   const coursesCopy = JSON.parse(JSON.stringify(courses))
@@ -270,7 +84,6 @@ function coursesMergeWeeks(courses) {
   }
   return Object.values(courseMap);
 }
-
 
 // 合并不同教师的相同课程
 function coursesMergeTeachers(courses) {
