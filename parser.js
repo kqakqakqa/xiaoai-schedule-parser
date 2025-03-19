@@ -1,15 +1,19 @@
 /**
- * parser
- * @param {string} providerRes 课程表数组字符串
+ * parser 不做处理/校验, 仅转发
+ * @param {string} str 来自provider
  * @returns {{
- *   name: string,
- *   position: string,
- *   teacher: string,
- *   weeks: number[],
- *   day: number,
- *   sections: number[],
- * }[]} 课程表数组
+ *   courseInfos: {
+ *     name: string,
+ *     position: string,
+ *     teacher: string,
+ *     weeks: number[],
+ *     day: number,
+ *     sections: number[],
+ *   }[],
+ *   something
+ * }} 课程表数组
  */
-function scheduleHtmlParser(providerRes) {
-  return JSON.parse(providerRes).schedule;
+function scheduleHtmlParser(str) {
+  const providerRes = JSON.parse(str); // 格式: { schedule: courseInfos, timetable: timerRes }
+  return { courseInfos: providerRes.schedule };
 }

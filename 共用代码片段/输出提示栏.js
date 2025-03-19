@@ -1,6 +1,6 @@
 /**
  * 输出提示栏组件 需要有dom环境
- * @version 0.1
+ * @version 0.2
  */
 async function newLogFrame() {
   // 删除已存在frame
@@ -23,7 +23,7 @@ async function newLogFrame() {
       z-index: ${getMaxZIndex() + 1};
     `;
   function getMaxZIndex() {
-    return [...document.querySelectorAll('*')].reduce((r, e) => Math.max(r, +window.getComputedStyle(e).zIndex || 0), 0) || 1
+    return [...document.querySelectorAll("*")].reduce((r, e) => Math.max(r, +window.getComputedStyle(e).zIndex || 0), 0) || 1
   }
   // 设置卡片
   const cardElement = document.createElement("iframe");
@@ -53,7 +53,7 @@ async function newLogFrame() {
   const iframeDocument = cardElement.contentDocument || cardElement.contentWindow?.document;
   // 自动调整高度
   new MutationObserver(() => {
-    cardElement.style.height = (iframeDocument.body.scrollHeight + 1) + 'px'; // 有小数部分
+    cardElement.style.height = (iframeDocument.body.scrollHeight + 1) + "px"; // 有小数部分
   }).observe(iframeDocument, { childList: true, subtree: true });
   // 点击外围退出
   baseElement.addEventListener("click", e => {
