@@ -1,16 +1,89 @@
 /**
- * provider
+ * provider + parser + timer
  * @param {Document | string} [iframeContent] 获取的网页元素
  * @param {Document | string} [frameContent] 获取的网页元素
  * @param {Document | string} [dom] 获取的网页元素
- * @returns {string} 课程表数组和providerRes参数
+ * @returns {string} 课表数组和providerRes参数
  */
 async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom = document) {
-
-
-  /* 输出提示栏 */
+  // 输出提示栏
   const logFrame = await newLogFrame();
+  const log = logFrame.log;
+  const createCopyButton = logFrame.createCopyButton;
 
+  if (!document.URL.includes("/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html")) {
+    log("<b>导入失败</b><br />页面不正确, 请确保当前位于“学生课表查询”页面<br />");
+    return "do not continue";
+  }
+
+  log("开始导入<br />");
+
+  log("获取请求参数<br />");
+  const xnm = document.querySelector("#xnm")?.value;
+  const xqm = document.querySelector("#xqm")?.value;
+  const gnmkdm = document.querySelector("#gnmkdm")?.value;
+  if (!xnm || !xqm || !gnmkdm) {
+    log("<b>导入失败</b><br />获取不到请求参数<br />");
+    return "do not continue";
+  }
+
+  log("网络请求课表数据...<br />");
+  let response;
+  try {
+    response = await fetch("/jwglxt/kbcx/xskbcx_cxXsgrkb.html", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+        "x-requested-with": "XMLHttpRequest"
+      },
+      body: new URLSearchParams({
+        xnm: xnm, // 学年
+        xqm: xqm, // 学期
+        kzlx: "ck",
+        xsdm: "",
+        gnmkdm: gnmkdm, // document.querySelector("#cdNav").outerHTML.match(/(?<=clickMenu\().*?(?=\);)/g)?.find(v => v.includes("学生课表查询"))?.split(",")[0].slice(1, -1);
+      }).toString(),
+    });
+  } catch (networkError) {
+    log("<b>导入失败</b><br />网络请求失败, 错误信息: " + networkError.message + "<br />");
+    return "do not continue";
+  }
+  if (!response.ok) {
+    log("<b>导入失败</b><br />网络请求失败, HTTP状态码: " + response.status + "<br />");
+    return "do not continue";
+  }
+
+  log("解析响应数据...<br />");
+  let scheduleRawStr;
+  try {
+    scheduleRawStr = await response.text();
+  } catch (parseError) {
+    log("<b>导入失败</b><br />解析响应数据失败: " + parseError.message + "<br />");
+    return "do not continue";
+  }
+
+  log("获取到课表数据, 长度" + scheduleRawStr.length + " ", createCopyButton(scheduleRawStr), "<br />");
+
+  // parser识别课表
+  const parserRes = parserInProvider(scheduleRawStr, logFrame);
+  if (parserRes === "do not continue") return "do not continue";
+  const courseInfos = parserRes.courseInfos;
+  log(createCopyButton(JSON.stringify(courseInfos)), "<br />");
+
+  // timer获取时间表
+  const timetable = timerInProvider({ parserRes: parserRes }, logFrame);
+  log(createCopyButton(JSON.stringify(timetable)), "<br />")
+
+  log("<br />3秒后完成导入");
+  await new Promise(e => setTimeout(e, 3000));
+  return JSON.stringify({ schedule: courseInfos, timetable: timetable }); // 导出给真正的parser.js和timer.js, parser.js和timer.js不做处理, 仅转发
+
+
+  /**
+   * 输出提示栏组件 需要有dom环境 请勿直接在此处修改函数内容
+   * @version 0.2.e6fa076
+   */
   async function newLogFrame() {
     // 删除已存在frame
     document.querySelectorAll(".xiaoai-schedule-parser-log-base")?.forEach(e => e.remove());
@@ -32,7 +105,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       z-index: ${getMaxZIndex() + 1};
     `;
     function getMaxZIndex() {
-      return [...document.querySelectorAll('*')].reduce((r, e) => Math.max(r, +window.getComputedStyle(e).zIndex || 0), 0) || 1
+      return [...document.querySelectorAll("*")].reduce((r, e) => Math.max(r, +window.getComputedStyle(e).zIndex || 0), 0) || 1
     }
     // 设置卡片
     const cardElement = document.createElement("iframe");
@@ -62,7 +135,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     const iframeDocument = cardElement.contentDocument || cardElement.contentWindow?.document;
     // 自动调整高度
     new MutationObserver(() => {
-      cardElement.style.height = (iframeDocument.body.scrollHeight + 1) + 'px'; // 有小数部分
+      cardElement.style.height = (iframeDocument.body.scrollHeight + 1) + "px"; // 有小数部分
     }).observe(iframeDocument, { childList: true, subtree: true });
     // 点击外围退出
     baseElement.addEventListener("click", e => {
@@ -71,165 +144,139 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       }
     });
 
-    function logToUser(msg) {
-      console.log(msg);
-      if (typeof msg === "string") {
-        const element = document.createElement("div");
-        element.innerHTML = msg;
-        iframeDocument.body.append(...element.childNodes);
-      }
-      else {
-        iframeDocument.body.append(msg);
+    function log(...msgs) {
+      for (const msg of msgs) {
+        console.log(msg);
+        if (typeof msg === "string") {
+          const e = document.createElement("span");
+          e.innerHTML = msg;
+          iframeDocument.body.append(...e.childNodes);
+        }
+        else {
+          iframeDocument.body.append(msg);
+        }
       }
       iframeDocument.body.scrollTo(0, iframeDocument.body.scrollHeight + 1)
     }
 
-    baseElement.logToUser = logToUser;
+    function createCopyButton(textToCopy) {
+      const copyButton = document.createElement("button");
+      copyButton.textContent = "点击复制";
+      copyButton.addEventListener("click", async e => {
+        await navigator.clipboard.writeText(textToCopy);
+        e.target.textContent = "已复制";
+      });
+      return copyButton;
+    }
+
+    baseElement.log = log;
+    baseElement.createCopyButton = createCopyButton;
     return baseElement;
   }
 
-  function createCopyButton(textToCopy) {
-    const copyButton = document.createElement("button");
-    copyButton.textContent = "点击复制";
-    copyButton.addEventListener("click", async e => {
-      await navigator.clipboard.writeText(textToCopy);
-      e.target.textContent = "已复制";
-    });
-    return copyButton;
+
+  function isValidJson(str) {
+    try {
+      const obj = JSON.parse(str);
+      return typeof obj === "object" && obj !== null;
+    } catch (e) {
+      return false;
+    }
   }
 
 
-  /* 导入 */
-  if (!document.URL.includes("jwglxt/kbcx/xskbcx_cxXskbcxIndex.html")) {
-    logFrame.logToUser("请确保当前位于【学生课表查询】页面<br />");
-    return "do not continue";
-  }
-  logFrame.logToUser("开始导入<br />");
 
-  logFrame.logToUser("请求课表数据（fetch）...");
-  const providerRes_schedule = await (await fetch("/jwglxt/kbcx/xskbcx_cxXsgrkb.html", { // "/jwglxt/kbcx/xskbcxMobile_cxXsKb.html"
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
-      "x-requested-with": "XMLHttpRequest"
-    },
-    body: new URLSearchParams({ // unresolved: 获取失败时的处理
-      xnm: document.querySelector("#xnm").value, // 学年
-      xqm: document.querySelector("#xqm").value, // 学期
-      kzlx: "ck",
-      xsdm: "",
-      gnmkdm: document.querySelector("#gnmkdm").value, // document.querySelector("#cdNav").outerHTML.match(/(?<=clickMenu\().*?(?=\);)/g)?.find(v => v.includes("学生课表查询"))?.split(",")[0].slice(1, -1);
-    }).toString(),
-  })).text();
-  logFrame.logToUser("完成！长度" + providerRes_schedule.length);
-  logFrame.logToUser(createCopyButton(providerRes_schedule));
-  logFrame.logToUser("<br />");
 
-  logFrame.logToUser("识别课程表...");
-  const parserRes = parserInProvider(providerRes_schedule, logFrame.logToUser);
-  logFrame.logToUser("完成！共" + parserRes.length + "门课");
-  logFrame.logToUser(createCopyButton(JSON.stringify(parserRes)));
-  logFrame.logToUser("<br />");
 
-  logFrame.logToUser("请求时间表数据（fetch）...");
-  const providerRes_timetable = await (await fetch("/jwglxt/kbcx/xskbcx_cxRjc.html", {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
-      "x-requested-with": "XMLHttpRequest"
-    },
-    body: new URLSearchParams({ // unresolved: 获取失败时的处理
-      xnm: document.querySelector("#xnm").value, // 学年
-      xqm: document.querySelector("#xqm").value, // 学期
-      xqh_id: getXqhId(providerRes_schedule), // 校区号
-      gnmkdm: document.querySelector("#gnmkdm").value,
-    }).toString(),
-  })).text();
-  logFrame.logToUser("完成！长度" + providerRes_timetable.length);
-  logFrame.logToUser(createCopyButton(providerRes_timetable));
-  logFrame.logToUser("<br />");
 
-  logFrame.logToUser("识别时间表...");
-  const timerRes = timerInProvider({ providerRes: providerRes_timetable }, logFrame.logToUser);
-  if (timerRes?.sections) { logFrame.logToUser("完成！共" + timerRes.sections.length + "节课"); }
-  else { logFrame.logToUser("完成！时间表为空，使用默认配置"); }
-  logFrame.logToUser(createCopyButton(JSON.stringify(timerRes)));
-  logFrame.logToUser("<br />");
-
-  logFrame.logToUser("<br />3秒后完成导入");
-  await new Promise(e => setTimeout(e, 3000));
-  return JSON.stringify({ schedule: parserRes, timetable: timerRes });
-
-  function getXqhId(jsonString) { // unresolved: jsonString为非预期内容(如空字符串或html格式报错)时的处理, 同下parserInProvider
-    const kbList = JSON.parse(jsonString).kbList; // 从课表中获取xqh_id
-    const countMap = {};
-    for (const course of kbList) { // 统计各xqh_id出现次数
-      countMap[course.xqh_id] = (countMap[course.xqh_id] ?? 0) + 1;
-    };
-    const [maxXqhId,] = Object.entries(countMap).sort(
-      ([, value1], [, value2]) => (value2 - value1)
-    )[0]; // 找到出现次数最多的xqh_id
-    return maxXqhId;
-  }
 
 
   /**
    * parser
-   * @param {string} jsonString 课程表数组字符串
-   * @param {function} logToUser 输出函数
+   * @param {string} scheduleRawStr 课表数组字符串
+   * @param {Element} logFrame 输出提示栏
    * @returns {{
-   *   name: string,
-   *   position: string,
-   *   teacher: string,
-   *   weeks: number[],
-   *   day: number,
-   *   sections: number[],
-   * }[]} 课程表数组
+   *   courseInfos: {
+   *     name: string,
+   *     position: string,
+   *     teacher: string,
+   *     weeks: number[],
+   *     day: number,
+   *     sections: number[],
+   *   }[],
+   *   something
+   * }} 课表数组
    */
-  function parserInProvider(jsonString, logToUser) {
+  function parserInProvider(scheduleRawStr, logFrame = {}) {
+    const log = logFrame.log ?? Function();
     const maxCourses = 150;
-    const kbList = JSON.parse(jsonString).kbList; // unresolved: jsonString为非预期内容(如空字符串或html格式报错)时的处理
-    logToUser("读取到" + kbList.length + "门课<br />");
-    // console.log(kbList)
 
-    logToUser("格式转换...");
+    log("识别课表<br />");
+
+    if (!isValidJson(scheduleRawStr)) {
+      log("<b>导入失败</b><br />未识别到课表<br />");
+      return "do not continue";
+    }
+    const kbList = JSON.parse(scheduleRawStr).kbList;
+    if (!Array.isArray(kbList)) {
+      log("<b>导入失败</b><br />未识别到课表<br />");
+      return "do not continue";
+    }
+
+    log("读取到" + kbList.length + "门课<br />");
+
+    log("格式转换<br />");
     let courses = [];
-    for (const course of kbList) { // unresolved: course为非预期类型(如null)时的处理
+    for (const course of kbList) {
+      if (
+        (course ?? null) === null ||
+        (course.zcd ?? null) === null ||
+        (course.xqj ?? null) === null ||
+        (course.jcs ?? null) === null
+      ) continue;
       courses.push({
-        name: course.kcmc ?? "-", // 课程名称 // unresolved: 能不能是""?
+        name: course.kcmc ?? "-", // 课程名称 (能不能是""?)
         position: course.cdmc ?? "-", // 上课地点
         teacher: course.xm ?? "-", // 教师姓名
-        weeks: parseWeeks(course.zcd), // 上课周次（第几周）
-        day: course.xqj, // 星期几（的周几）
-        sections: parseSections(course.jcs) // 上课节次（的第几节）
+        weeks: parseWeeks(course.zcd), // 课程周数
+        day: course.xqj, // 课程所在星期
+        sections: parseSections(course.jcs) // 课程节次
       });
     }
-    logToUser("完成！转换了" + courses.length + "门课<br />");
+    log("转换了" + courses.length + "门课<br />");
     // console.log(coursesRaw);
 
-    logToUser("处理冲突课程..."); // unresolved: course1~course4有效性检验, 是否非预期值?
+    log("处理冲突课程<br />");
     const courses1 = coursesResolveConflicts(courses);
-    logToUser("完成！处理后还有" + courses1.length + "门课<br />");
+    log("处理后还有" + courses1.length + "门课<br />");
     // console.log(courses1);
 
-    logToUser("合并不同周的相同课程...");
+    log("合并不同周的相同课程<br />");
     const courses2 = coursesMergeWeeks(courses1); // 合并不同周的相同课程
-    logToUser("完成！合并后还有" + courses2.length + "门课<br />");
+    log("合并后还有" + courses2.length + "门课<br />");
     // console.log(courses2);
 
-    logToUser("合并不同教师的相同课程...");
+    log("合并不同教师的相同课程<br />");
     const courses3 = (courses2.length > maxCourses) ? coursesMergeTeachers(courses2) : courses2; //如果课太多，就合并不同教师的相同课程
-    logToUser("完成！合并后还有" + courses3.length + "门课<br />");
+    log("合并后还有" + courses3.length + "门课<br />");
     // console.log(courses3);
 
-    logToUser("合并不同教室的相同课程...");
+    log("合并不同教室的相同课程<br />");
     const courses4 = (courses3.length > maxCourses) ? coursesMergeClassrooms(courses3) : courses3; //如果课太多，就合并不同教室的相同课程
-    logToUser("完成！合并后还有" + courses4.length + "门课<br />");
+    log("合并后还有" + courses4.length + "门课<br />");
     // console.log(courses4);
 
-    return courses4;
+    log("识别当前学期<br />");
+    const countMap = {};
+    for (const course of kbList) { // 统计各xqh_id出现次数
+      countMap[course.xqh_id] = (countMap[course.xqh_id] ?? 0) + 1;
+    };
+    const [mostXqhId,] = Object.entries(countMap).sort(
+      ([, value1], [, value2]) => (value2 - value1)
+    )[0]; // 找到出现次数最多的xqh_id
+
+    return { courseInfos: courses4, xqhId: mostXqhId };
+
 
     /**
      * 新正方周次解析 请勿直接在此处修改函数内容
@@ -291,8 +338,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
                 position: course.position,
                 teacher: course.teacher,
               };
-            }
-            else {
+            } else {
               coursesOrdered[week][day][section] = {
                 name: "" + coursesOrdered[week][day][section].name + separator + course.name,
                 position: "" + coursesOrdered[week][day][section].position + separator + course.position,
@@ -417,13 +463,19 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   }
 
 
+
+
+
+
+
+
   /**
    * timer
    * @param {{
    *   providerRes:string,
    *   parserRes:Object,
    * }} [res] 来自provider和parser的数据
-   * @param {function} logToUser 输出函数
+   * @param {Element} logFrame 输出提示栏
    * @returns {{
    *   totalWeek: number,
    *   startSemester: string,
@@ -439,7 +491,46 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
    *   }[],
    * }} 时间表
    */
-  function timerInProvider({ providerRes, parserRes } = {}, logToUser) {
+  async function timerInProvider({ providerRes, parserRes } = {}, logFrame = {}) {
+    const log = logFrame.log ?? Function();
+    const createCopyButton = logFrame.createCopyButton ?? Function();
+
+    log("网络请求时间表数据...<br />");
+    let response;
+    try {
+      response = await fetch("/jwglxt/kbcx/xskbcx_cxRjc.html", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+          "x-requested-with": "XMLHttpRequest"
+        },
+        body: new URLSearchParams({
+          xnm,
+          xqm,
+          xqh_id: parserRes.xqhId, // 校区号
+          gnmkdm
+        }).toString(),
+      });
+    } catch (networkError) {
+      log("网络请求失败, 错误信息: " + networkError.message + "<br />");
+      return {};
+    }
+    if (!response.ok) {
+      log("网络请求失败, HTTP状态码: " + response.status + "<br />");
+      return {};
+    }
+
+    log("解析响应数据...<br />");
+    let timetableRawStr;
+    try {
+      timetableRawStr = await response.text();
+    } catch (parseError) {
+      log("解析响应数据失败: " + parseError.message);
+      return {};
+    }
+    log("获取到时间表数据, 长度" + timetableRawStr.length + " ", createCopyButton(timetableRawStr), "<br />");
+
     let timetable = {
       totalWeek: 30,
       startSemester: "",
@@ -450,10 +541,29 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       night: 0,
       sections: [],
     };
-    const providerRes_timetable = JSON.parse(providerRes);
-    logToUser("读取到" + providerRes_timetable.length + "节课<br />");
-    logToUser("格式转换...");
-    for (const time of providerRes_timetable) {
+
+    log("识别时间表<br />");
+
+    if (!isValidJson(timetableRawStr)) {
+      log("未识别到时间表<br />");
+      return {};
+    }
+    const timetableRaw = JSON.parse(timetableRawStr);
+    if (!Array.isArray(timetableRaw)) {
+      log("未识别到时间表<br />");
+      return {};
+    }
+
+    log("读取到" + timetableRaw.length + "节课<br />");
+
+    log("格式转换<br />");
+    for (const time of timetableRaw) {
+      if (
+        (time ?? null) === null ||
+        (time.jcmc ?? null) === null ||
+        (time.qssj ?? null) === null ||
+        (time.jssj ?? null) === null
+      ) continue;
       timetable.sections.push({
         section: parseInt(time.jcmc),
         startTime: time.qssj,
@@ -471,7 +581,8 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
           break;
       }
     }
-    logToUser("完成！转换了" + timetable.sections.length + "节课<br />");
+    log("转换了" + timetable.sections.length + "节课<br />");
     return timetable;
   }
+
 }
