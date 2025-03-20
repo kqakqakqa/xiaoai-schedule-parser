@@ -42,7 +42,7 @@ async function scheduleHtmlProvider() {
   }
 
   /* parser */
-  function scheduleHtmlParser(html, LogToUser) {
+  function scheduleHtmlParser(html, LogToUser) { // unresolved: 连跨四个时间段的大课可能会只识别成两个
     let result = [];
     LogToUser("解析" + kbList.length + "网页内容...\n");
     const $ = cheerio.load(html, { decodeEntities: false });

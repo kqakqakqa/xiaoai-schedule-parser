@@ -1,6 +1,6 @@
 /**
  * 输出提示栏组件 需要有dom环境
- * @version 0.2
+ * @version 0.3
  */
 async function newLogFrame() {
   // 删除已存在frame
@@ -77,7 +77,7 @@ async function newLogFrame() {
     iframeDocument.body.scrollTo(0, iframeDocument.body.scrollHeight + 1)
   }
 
-  function createCopyButton(textToCopy) {
+  function copyButton(textToCopy) {
     const copyButton = document.createElement("button");
     copyButton.textContent = "点击复制";
     copyButton.addEventListener("click", async e => {
@@ -87,7 +87,15 @@ async function newLogFrame() {
     return copyButton;
   }
 
+  function repoLink() {
+    const e = document.createElement("span");
+    e.append("本适配项目的链接: ");
+    e.append(copyButton("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
+    return e;
+  }
+
   baseElement.log = log;
-  baseElement.createCopyButton = createCopyButton;
+  baseElement.copyButton = copyButton;
+  baseElement.repoLink = repoLink;
   return baseElement;
 }
