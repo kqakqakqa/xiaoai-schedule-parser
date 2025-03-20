@@ -9,14 +9,16 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   // 输出提示栏
   const logFrame = await newLogFrame();
   const log = logFrame.log;
-  const createCopyButton = logFrame.createCopyButton;
+  const copyButton = logFrame.copyButton;
+  const repoLink = logFrame.repoLink;
+
+  log("开始导入<br />");
 
   if (!document.URL.includes("/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html")) {
     log("<b>导入失败</b><br />页面不正确, 请确保当前位于“学生课表查询”页面<br />");
+    log(repoLink());
     return "do not continue";
   }
-
-  log("开始导入<br />");
 
   log("获取请求参数<br />");
   const xnm = document.querySelector("#xnm")?.value;
@@ -24,6 +26,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   const gnmkdm = document.querySelector("#gnmkdm")?.value;
   if (!xnm || !xqm || !gnmkdm) {
     log("<b>导入失败</b><br />获取不到请求参数<br />");
+    log(repoLink());
     return "do not continue";
   }
 
@@ -47,10 +50,12 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     });
   } catch (networkError) {
     log("<b>导入失败</b><br />网络请求失败, 错误信息: " + networkError.message + "<br />");
+    log(repoLink());
     return "do not continue";
   }
   if (!response.ok) {
     log("<b>导入失败</b><br />网络请求失败, HTTP状态码: " + response.status + "<br />");
+    log(repoLink());
     return "do not continue";
   }
 
@@ -60,29 +65,34 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     scheduleRawStr = await response.text();
   } catch (parseError) {
     log("<b>导入失败</b><br />解析响应数据失败: " + parseError.message + "<br />");
+    log(repoLink());
     return "do not continue";
   }
 
-  log("获取到课表数据, 长度" + scheduleRawStr.length + " ", createCopyButton(scheduleRawStr), "<br />");
+  log("获取到课表数据, 长度" + scheduleRawStr.length + " ", copyButton(scheduleRawStr), "<br />");
 
   // parser识别课表
   const parserRes = parserInProvider(scheduleRawStr, logFrame);
-  if (parserRes === "do not continue") return "do not continue";
+  if (parserRes === "do not continue") {
+    log(repoLink());
+    return "do not continue";
+  }
   const courseInfos = parserRes.courseInfos;
-  log(createCopyButton(JSON.stringify(courseInfos)), "<br />");
+  log(copyButton(JSON.stringify(courseInfos)), "<br />");
 
   // timer获取时间表
   const timetable = timerInProvider({ parserRes: parserRes }, logFrame);
-  log(createCopyButton(JSON.stringify(timetable)), "<br />")
+  log(copyButton(JSON.stringify(timetable)), "<br />")
 
   log("<br />3秒后完成导入");
   await new Promise(e => setTimeout(e, 3000));
+  log(repoLink());
   return JSON.stringify({ schedule: courseInfos, timetable: timetable }); // 导出给真正的parser.js和timer.js, parser.js和timer.js不做处理, 仅转发
 
 
   /**
    * 输出提示栏组件 需要有dom环境 请勿直接在此处修改函数内容
-   * @version 0.2.e6fa076
+   * @version 0.3.143d203
    */
   async function newLogFrame() {
     // 删除已存在frame
@@ -159,7 +169,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       iframeDocument.body.scrollTo(0, iframeDocument.body.scrollHeight + 1)
     }
 
-    function createCopyButton(textToCopy) {
+    function copyButton(textToCopy) {
       const copyButton = document.createElement("button");
       copyButton.textContent = "点击复制";
       copyButton.addEventListener("click", async e => {
@@ -169,8 +179,16 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       return copyButton;
     }
 
+    function repoLink() {
+      const e = document.createElement("span");
+      e.append("本适配项目的链接: ");
+      e.append(copyButton("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
+      return e;
+    }
+
     baseElement.log = log;
-    baseElement.createCopyButton = createCopyButton;
+    baseElement.copyButton = copyButton;
+    baseElement.repoLink = repoLink;
     return baseElement;
   }
 
@@ -280,7 +298,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
     /**
      * 新正方周次解析 请勿直接在此处修改函数内容
-     * @version 0.5.02ba968
+     * @version 0.6.143d203
      * @param {string} weeksString eg: "4-6周(双),7-11周,13周"
      * @returns {number[]} eg: [4,6,7,8,9,10,11,13]
      */
@@ -292,8 +310,8 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
         const range = rangeString.split("-"); // eg: ["4","6"]
         const start = parseInt(range[0]);
         const end = parseInt(range[1] ?? range[0]); // 只有一周就设置end为start
-        const evenWeeks = (oddEvenLabel === "(双)" || !oddEvenLabel); // 双周 or 不分单双周
-        const oddWeeks = (oddEvenLabel === "(单)" || !oddEvenLabel); // 单周 or 不分单双周
+        const evenWeeks = (oddEvenLabel.includes("双") || !oddEvenLabel); // 双周 or 不分单双周
+        const oddWeeks = (oddEvenLabel.includes("单") || !oddEvenLabel); // 单周 or 不分单双周
         for (let w = start; w <= end; w++) { // 填充 weeks 的 start-end 之间
           if ((!(w % 2) && evenWeeks) || ((w % 2) && oddWeeks)) weeks.push(w);
         }
