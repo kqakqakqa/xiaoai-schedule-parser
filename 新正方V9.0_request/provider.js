@@ -189,7 +189,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     }
 
     // 课程后处理
-    const postProcessings = getPostProcessings();
+    const postProcessings = coursePostProcessings();
 
     logFrame.log("处理冲突课程<br />");
     const courses1 = postProcessings.resolveConflicts(courses);
@@ -237,9 +237,9 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
     /**
      * 通用课程后处理
-     * @version 0.5.2a6f14e
+     * @version 0.6.81b7519
      */
-    function getPostProcessings({ maxCourses = Infinity }) {
+    function coursesPostProcessings() {
       // 粘贴到此处
     }
 
