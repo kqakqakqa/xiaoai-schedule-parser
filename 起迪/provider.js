@@ -33,7 +33,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
     let response;
     try {
-      response = await fetch("https://qdjw.gxsdxy.cn/StuClient/Tea/PKGL/KBCX/StuCourseSchedule.aspx", {
+      response = await fetch("/StuClient/Tea/PKGL/KBCX/StuCourseSchedule.aspx", {
         headers: {
           "content-type": "application/x-www-form-urlencoded"
         },
