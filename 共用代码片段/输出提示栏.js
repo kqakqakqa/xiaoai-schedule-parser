@@ -1,6 +1,6 @@
 /**
- * 输出提示栏组件 需要有dom环境
- * @version 0.4
+ * 输出提示栏 需要有dom环境
+ * @version 0.5
  */
 async function newLogFrame() {
   // 删除已存在frame
@@ -41,19 +41,20 @@ async function newLogFrame() {
   cardElement.style.cssText = `
       display: block;
       width: 100vh;
-      max-width: 80%;
-      max-height: 80%;
+      max-width: calc(80% - 40px);
+      max-height: calc(80% - 40px);
       border: none;
       border-radius: 10px;
       padding: 20px;
       background: rgba(255, 255, 255, 0.9);
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      box-sizing: content-box;
       overflow: hidden;
     `;
   const iframeDocument = cardElement.contentDocument || cardElement.contentWindow?.document;
   // 自动调整高度
   new MutationObserver(() => {
-    cardElement.style.height = (iframeDocument.body.scrollHeight + 1) + "px"; // 有小数部分 //todo: height绑定在baseElement上而不是body上
+    cardElement.style.height = (iframeDocument.body.scrollHeight + 1) + "px"; // 有小数部分所以+1
   }).observe(iframeDocument, { childList: true, subtree: true });
   // 点击外围退出
   baseElement.addEventListener("click", e => {
@@ -74,7 +75,7 @@ async function newLogFrame() {
         iframeDocument.body.append(msg);
       }
     }
-    iframeDocument.body.scrollTo(0, iframeDocument.body.scrollHeight + 1)
+    iframeDocument.body.scrollTo(0, iframeDocument.body.scrollHeight + 1);
   }
 
   baseElement.log = log;

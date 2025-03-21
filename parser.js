@@ -14,6 +14,6 @@
  * }} 课程表数组
  */
 function scheduleHtmlParser(str) {
-  const providerRes = JSON.parse(str); // 格式: { schedule: courseInfos, timetable: timerRes }
-  return { courseInfos: providerRes.schedule };
+  const providerRes = JSON.parse(str); // 格式: { courses: courseInfos, timetable: timerRes }
+  return { courseInfos: providerRes.courses };
 }
