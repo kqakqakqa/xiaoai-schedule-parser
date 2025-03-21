@@ -1,6 +1,6 @@
 /**
  * 通用课程后处理
- * @version 0.8
+ * @version 0.9
  */
 function coursesPostProcessings() {
   return {
@@ -18,78 +18,6 @@ function coursesPostProcessings() {
 
 
   // 合并重复&冲突课程
-  // function mergeConflictsAndDuplicates(courses, separator = "&") {
-  //   const courseMap = {};
-  //   for (const course of courses) {
-  //     for (const week of course.weeks) {
-  //       for (const section of course.sections) { // 拆成多门单周、单节课程
-  //         const keyObject = { // weeks day sections相同即为重复或冲突课程
-  //           weeks: [week],
-  //           day: course.day,
-  //           sections: [section],
-  //         };
-  //         const key = JSON.stringify(keyObject);
-  //         const key2Object = { // name position teacher相同即为重复课程, 不同即为冲突课程
-  //           name: course.name,
-  //           position: course.position,
-  //           teacher: course.teacher,
-  //         };
-  //         const key2 = JSON.stringify(key2Object);
-  //         const courseSplit = Object.assign({}, key2Object, keyObject);
-  //         if (!courseMap[key]) courseMap[key] = {};
-  //         courseMap[key][key2] = courseSplit; // 重复课程被覆盖, 因此去重
-  //       }
-  //     }
-  //   }
-
-  //   const courseMap2 = {};
-  //   for (const [key2, courseSplitMap] of Object.entries(courseMap)) { // courseSplitMap里都是冲突课程
-  //     const { day, weeks, sections } = JSON.parse(key2);
-
-  //     // 冲突课程name position teacher合并
-  //     const nameMerged = [];
-  //     const positionMerged = [];
-  //     const teacherMerged = [];
-  //     for (const { name, position, teacher } of Object.values(courseSplitMap)) {
-  //       nameMerged.push(name);
-  //       positionMerged.push(position);
-  //       teacherMerged.push(teacher);
-  //     };
-  //     const name = nameMerged.join(separator);
-  //     const position = positionMerged.join(separator);
-  //     const teacher = teacherMerged.join(separator);
-
-  //     // 多节相同课程合并为一节连续节次课程
-  //     const course = {
-  //       name: name,
-  //       position: position,
-  //       teacher: teacher,
-  //       weeks: weeks,
-  //       day: day,
-  //       sections: [],
-  //     };
-  //     const key3 = JSON.stringify(course); // name position teacher weeks day相同即为相同课程
-  //     if (!courseMap2[key3]) courseMap2[key3] = course;
-  //     courseMap2[key3].sections = Array.from(new Set(courseMap2[key3].sections.concat(sections))).sort((a, b) => a - b); // sections合并, 去重, 排序 //todo: 一天上两次课，两次节次是断开的, 怎么办?
-
-  //   }
-
-  //   const coursesNew = Object.values(courseMap2);
-  //   for (const course of coursesNew) {
-
-  //   }
-
-  //   return Object.values(courseMap2);
-  // }
-
-
-
-
-
-
-
-
-
   function mergeConflictsAndDuplicates(courses) {
     const coursesCopy = JSON.parse(JSON.stringify(courses));
     const courseMap = {};
@@ -156,16 +84,6 @@ function coursesPostProcessings() {
 
     return courses4;
   }
-
-
-
-
-
-
-
-
-
-
 
 
   // 合并不同周数的相同课程
