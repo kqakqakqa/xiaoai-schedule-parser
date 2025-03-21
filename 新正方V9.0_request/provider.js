@@ -189,7 +189,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     }
 
     // 课程后处理
-    const postProcessings = coursePostProcessings();
+    const postProcessings = coursesPostProcessings();
 
     logFrame.log("处理冲突课程<br />");
     const courses1 = postProcessings.resolveConflicts(courses);
