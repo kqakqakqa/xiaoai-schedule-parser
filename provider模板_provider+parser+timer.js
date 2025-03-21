@@ -1,6 +1,6 @@
 /**
- * provider + parser + timer 空模板
- * @version 0.1
+ * 模板_provider+parser+timer 
+ * @version 0.2
  * @param { Document | string } iframeContent 获取的网页元素
  * @param { Document | string } frameContent 获取的网页元素
  * @param { Document | string } dom 获取的网页元素

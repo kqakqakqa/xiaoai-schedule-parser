@@ -1,9 +1,10 @@
 /**
- * provider + parser + timer
+ * provider + parser + timer 基于空模板
+ * @version 0.1.46d2ca7
  * @param { Document | string } iframeContent 获取的网页元素
  * @param { Document | string } frameContent 获取的网页元素
  * @param { Document | string } dom 获取的网页元素
- * @returns { Promise< string > } 包含课程数组和其他自定义属性, 导出给parser.js和timer.js, parser.js和timer.js不做处理, 仅转发
+ * @returns { Promise< string > } 包含courses和timetable, 导出给parser.js和timer.js, parser.js和timer.js不做处理, 仅转发
  */
 async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom = document) { // todo: 重复点击导入按钮
   /* 导入流程开始 */
