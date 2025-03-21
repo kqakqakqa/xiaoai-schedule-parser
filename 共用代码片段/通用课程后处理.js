@@ -1,6 +1,6 @@
 /**
  * 通用课程后处理
- * @version 0.6
+ * @version 0.7
  */
 function coursesPostProcessings() {
   return {
@@ -66,10 +66,12 @@ function coursesPostProcessings() {
         teacher: teacher,
         weeks: weeks,
         day: day,
+        sections: [],
       };
       const key3 = JSON.stringify(course); // name position teacher weeks day相同即为相同课程
-      if (!courseMap2[key3]) { courseMap2[key3] = course; }
-      else {
+      if (!courseMap2[key3]) {
+        courseMap2[key3] = course;
+      } else {
         courseMap2[key3].sections = Array.from(new Set(courseMap2[key3].sections.concat(sections))).sort((a, b) => a - b); // sections合并, 去重, 排序
       }
     }
@@ -88,6 +90,7 @@ function coursesPostProcessings() {
         name: course.name,
         position: course.position,
         teacher: course.teacher,
+        weeks: [],
         day: course.day,
         sections: course.sections,
       });
