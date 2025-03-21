@@ -13,8 +13,8 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   logFrame.log("开始导入<br />");
 
   if (!document.URL.includes("/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html")) {
-    logFrame.log("<b>导入失败</b><br />页面不正确, 请确保当前位于“学生课表查询”页面<br />");
-    logFrame.log(logFrame.repoLink());
+    logFrame.log("<b>导入失败</b><br />页面不正确, 请确保当前位于“学生课表查询”页面<br /><br />", logFrame.repoLink());
+    logFrame.log();
     return "do not continue";
   }
 
@@ -23,8 +23,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   const xqm = document.querySelector("#xqm")?.value ?? document.querySelector("#xqm_hide")?.value; // 学期
   const gnmkdm = document.querySelector("#gnmkdm")?.value ?? "N2151"; // todo: document.querySelector("#cdNav").outerHTML.match(/(?<=clickMenu\().*?(?=\);)/g)?.find(v => v.includes("学生课表查询"))?.split(",")[0].slice(1, -1);
   if (!xnm || !xqm || !gnmkdm) {
-    logFrame.log("<b>导入失败</b><br />获取不到请求参数<br />");
-    logFrame.log(logFrame.repoLink());
+    logFrame.log("<b>导入失败</b><br />获取不到请求参数, 请确保当前位于“学生课表查询”页面<br /><br />", logFrame.repoLink());
     return "do not continue";
   }
 
@@ -47,13 +46,11 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       }).toString(),
     });
   } catch (networkError) {
-    logFrame.log("<b>导入失败</b><br />网络请求失败, 错误信息: " + networkError.message + "<br />请确保教务系统已登录<br />"); // todo: 尝试切换到班级课表? "/jwglxt/kbdy/bjkbdy_cxBjkbdyIndex.html?gnmkdm=N214505&layout=default"
-    logFrame.log(logFrame.repoLink());
+    logFrame.log("<b>导入失败</b><br />网络请求失败, 错误信息: " + networkError.message + "<br />请确保教务系统已登录<br /><br />", logFrame.repoLink()); // todo: 尝试切换到班级课表? "/jwglxt/kbdy/bjkbdy_cxBjkbdyIndex.html?gnmkdm=N214505&layout=default"
     return "do not continue";
   }
   if (!response.ok) {
-    logFrame.log("<b>导入失败</b><br />网络请求失败, " + response.status + " " + response.statusText + "<br />请确保教务系统已登录<br />");
-    logFrame.log(logFrame.repoLink());
+    logFrame.log("<b>导入失败</b><br />网络请求失败, " + response.status + " " + response.statusText + "<br />请确保教务系统已登录<br /><br />", logFrame.repoLink());
     return "do not continue";
   }
 
@@ -62,8 +59,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   try {
     coursesRawStr = await response.text();
   } catch (parseError) {
-    logFrame.log("<b>导入失败</b><br />解析响应数据失败: " + parseError.message + "<br />请确保教务系统已登录<br />");
-    logFrame.log(logFrame.repoLink());
+    logFrame.log("<b>导入失败</b><br />解析响应数据失败: " + parseError.message + "<br />请确保教务系统已登录<br /><br />", logFrame.repoLink());
     return "do not continue";
   }
 
@@ -75,14 +71,14 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     return "do not continue";
   }
   const courses = parserRes.courseInfos;
-  logFrame.log(logFrame.copyButton(JSON.stringify(courses)), "<br />");
+  logFrame.log("共" + courses.length + "门课 ", logFrame.copyButton(JSON.stringify(courses)), "<br />");
 
   // timer获取时间表
   const timetable = await timerInProvider({ parserRes: parserRes }, logFrame);
-  logFrame.log(logFrame.copyButton(JSON.stringify(timetable)), "<br />")
+  logFrame.log("共" + timetable.sections.length + "节课 ", logFrame.copyButton(JSON.stringify(timetable)), "<br />")
 
-  logFrame.log(logFrame.repoLink(), "<br />");
-  logFrame.log("<br />3秒后完成导入...");
+  logFrame.log("<br />", logFrame.repoLink(), "<br />");
+  logFrame.log("3秒后完成导入...");
   await new Promise(e => setTimeout(e, 3000));
   return JSON.stringify({ courses: courses, timetable: timetable }); // 导出给parser.js和timer.js, parser.js和timer.js不做处理, 仅转发
 
@@ -90,8 +86,8 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
 
   /**
-   * 输出提示栏组件 需要有dom环境
-   * @version 0.4.2a6f14e
+   * 输出提示栏 需要有dom环境
+   * @version 0.5.5b94389
    */
   async function newLogFrame() {
     // 粘贴到此处
@@ -136,14 +132,12 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     logFrame.log("识别课程数据<br />");
 
     if (!isValidJson(coursesRawStr)) {
-      logFrame.log("<b>导入失败</b><br />未识别到课程数据<br />请确保教务系统已登录<br />");
-      logFrame.log(logFrame.repoLink());
+      logFrame.log("<b>导入失败</b><br />未识别到课程数据<br />请确保教务系统已登录<br /><br />", logFrame.repoLink());
       return "do not continue";
     }
     const kbList = JSON.parse(coursesRawStr).kbList;
     if (!Array.isArray(kbList)) {
-      logFrame.log("<b>导入失败</b><br />未识别到课程数据<br />请确保教务系统已登录<br />");
-      logFrame.log(logFrame.repoLink());
+      logFrame.log("<b>导入失败</b><br />未识别到课程数据<br />请确保教务系统已登录<br /><br />", logFrame.repoLink());
       return "do not continue";
     }
 
@@ -191,28 +185,27 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     // 课程后处理
     const postProcessings = coursesPostProcessings();
 
-    logFrame.log("处理冲突课程<br />");
-    const courses1 = postProcessings.resolveConflicts(courses);
-    logFrame.log("处理后还有" + courses1.length + "门课<br />");
+    logFrame.log("处理冲突课程...");
+    const courses1 = postProcessings.mergeConflictsAndDuplicates(courses);
+    logFrame.log("处理后还有" + courses1.length + "门课 ", logFrame.copyButton(JSON.stringify(courses1)), "<br />");
 
-    logFrame.log("处理冲突课程<br />");
-    const courses2 = postProcessings.resolveConflicts(courses1);
-    logFrame.log("处理后还有" + courses2.length + "门课<br />");
+    logFrame.log("合并不同周数的相同课程...");
+    const courses2 = postProcessings.mergeWeeks(courses1);
+    logFrame.log("合并后还有" + courses2.length + "门课 ", logFrame.copyButton(JSON.stringify(courses2)), "<br />");
 
-    logFrame.log("合并不同周的相同课程<br />");
-    const courses3 = postProcessings.mergeWeeks(courses2); // 合并不同周的相同课程
-    logFrame.log("合并后还有" + courses3.length + "门课<br />");
-
-    logFrame.log("合并不同教师/教室的相同课程<br />");
-    const courses4 = (courses3.length > maxCourses) ? postProcessings.mergeTeachersOrPositions(courses3, mergePositions = true, mergeTeachers = true) : courses3; //如果课太多，就合并不同教室的相同课程
-    logFrame.log("合并后还有" + courses4.length + "门课<br />");
+    let courses3 = courses2;
+    if (courses2.length > maxCourses) {
+      logFrame.log("合并不同教师/教室的相同课程...");
+      courses3 = postProcessings.mergeTeachersOrPositions(courses2, mergePositions = true, mergeTeachers = true);
+      logFrame.log("合并后还有" + courses3.length + "门课 ", logFrame.copyButton(JSON.stringify(courses3)), "<br />");
+    }
 
     logFrame.log("识别当前学期<br />");
     const [mostXqhId,] = Object.entries(countMap).sort(
       ([, value1], [, value2]) => (value2 - value1)
     )[0]; // 找到出现次数最多的xqhId. 就算是"undefined"也没关系
 
-    return { courseInfos: courses4, xqhId: mostXqhId };
+    return { courseInfos: courses3, xqhId: mostXqhId };
 
 
     /**
@@ -237,7 +230,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
     /**
      * 通用课程后处理
-     * @version 0.6.81b7519
+     * @version 0.12.7f27d73
      */
     function coursesPostProcessings() {
       // 粘贴到此处
@@ -383,7 +376,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
     logFrame.log("读取到" + timetableRaw.length + "节课<br />");
 
-    logFrame.log("格式转换<br />");
+    logFrame.log("格式转换...");
     for (const time of timetableRaw) {
       if (!time ||
         typeof time?.jcmc !== "string" ||
