@@ -1,6 +1,6 @@
 /**
  * 通用课程后处理
- * @version 0.10
+ * @version 0.11
  */
 function coursesPostProcessings() {
   return {
@@ -43,9 +43,9 @@ function coursesPostProcessings() {
 
           if (!courseMap[key1]) courseMap[key1] = courseSplit1;
           if (!courseMap[key1].key2s.includes(key2)) { // 舍弃重复课程, 合并冲突课程
-            courseMap[key1].name += "," + course.name;
-            courseMap[key1].position += "," + course.position;
-            courseMap[key1].teacher += "," + course.teacher;
+            courseMap[key1].name += (courseMap[key1].name === "" ? "," : "") + course.name;
+            courseMap[key1].position += (courseMap[key1].position === "" ? "," : "") + course.position;
+            courseMap[key1].teacher += (courseMap[key1].teacher === "" ? "," : "") + course.teacher;
             courseMap[key1].key2s.push(key2);
           }
         }
