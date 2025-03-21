@@ -2,6 +2,10 @@
 
 一些学校教务系统的小爱课程表导入适配脚本。
 
+## 适配学校
+
+[福建医科大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/tree/福建医科大学/新正方V9.0_request)
+
 ## 相关资源
 
 [小爱课程表开发者工具使用教程](https://open-schedule-prod.ai.xiaomi.com/docs/#/help/) 官方文档
