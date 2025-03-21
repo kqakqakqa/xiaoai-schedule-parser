@@ -1,6 +1,6 @@
 /**
  * 输出提示栏组件 需要有dom环境
- * @version 0.3
+ * @version 0.4
  */
 async function newLogFrame() {
   // 删除已存在frame
@@ -53,7 +53,7 @@ async function newLogFrame() {
   const iframeDocument = cardElement.contentDocument || cardElement.contentWindow?.document;
   // 自动调整高度
   new MutationObserver(() => {
-    cardElement.style.height = (iframeDocument.body.scrollHeight + 1) + "px"; // 有小数部分
+    cardElement.style.height = (iframeDocument.body.scrollHeight + 1) + "px"; // 有小数部分 //todo: height绑定在baseElement上而不是body上
   }).observe(iframeDocument, { childList: true, subtree: true });
   // 点击外围退出
   baseElement.addEventListener("click", e => {
@@ -77,6 +77,11 @@ async function newLogFrame() {
     iframeDocument.body.scrollTo(0, iframeDocument.body.scrollHeight + 1)
   }
 
+  baseElement.log = log;
+  baseElement.copyButton = copyButton;
+  baseElement.repoLink = repoLink;
+  return baseElement;
+
   function copyButton(textToCopy) {
     const copyButton = document.createElement("button");
     copyButton.textContent = "点击复制";
@@ -89,13 +94,8 @@ async function newLogFrame() {
 
   function repoLink() {
     const e = document.createElement("span");
-    e.append("本适配项目的链接: ");
+    e.append("如果你需要，可以查看本适配项目源代码: ");
     e.append(copyButton("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
     return e;
   }
-
-  baseElement.log = log;
-  baseElement.copyButton = copyButton;
-  baseElement.repoLink = repoLink;
-  return baseElement;
 }

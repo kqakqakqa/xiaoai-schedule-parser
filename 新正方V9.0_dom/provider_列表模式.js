@@ -42,7 +42,7 @@ async function scheduleHtmlProvider() {
   }
 
   /* parser */
-  function scheduleHtmlParser(html, LogToUser) { // unresolved: 连跨四个时间段的大课可能会只识别成两个
+  function scheduleHtmlParser(html, LogToUser) { // todo: 连跨四个时间段的大课可能会只识别成两个
     let result = [];
     LogToUser("解析" + kbList.length + "网页内容...\n");
     const $ = cheerio.load(html, { decodeEntities: false });
@@ -105,7 +105,7 @@ async function scheduleHtmlProvider() {
      * @param {string} weeksString eg: "4-6周(双),7-11周,13周"
      * @returns {number[]} eg: [4,6,7,8,9,10,11,13]
      */
-    function parseWeeks(weeksString) { // unresolved: weeksString识别失败时的输出; 如果格式是"第1-5周,7周单,9-12周双"怎么办
+    function parseWeeks(weeksString) { // todo: weeksString识别失败时的输出; 如果格式是"第1-5周,7周单,9-12周双"怎么办
       let weeks = [];
       const ranges = weeksString.split(/[,，]/); // eg: ["4-6周(双)",...]
       for (const rangeWithLabel of ranges) { // eg: "4-6周(双)"
@@ -128,7 +128,7 @@ async function scheduleHtmlProvider() {
      * @param {string} sectionsString eg: "1-4"
      * @returns {number[]} eg: [1,2,3,4]
      */
-    function parseSections(sectionsString) { // unresolved: sectionsString识别失败时的输出; 如果格式是"1-4节,6-8节"怎么办
+    function parseSections(sectionsString) { // todo: sectionsString识别失败时的输出; 如果格式是"1-4节,6-8节"怎么办
       let sections = [];
       const range = sectionsString.replace(/节$/g, "").split("-"); // 以防万一存在"节"
       const start = parseInt(range[0]);
