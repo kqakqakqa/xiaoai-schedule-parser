@@ -1,8 +1,8 @@
 /**
  * 通用课程后处理
- * @version 0.5
+ * @version 0.6
  */
-function coursesPostProcessings({ maxCourses = Infinity }) {
+function coursesPostProcessings() {
   return {
     check: check,
     mergeConflictsAndDuplicates: mergeConflictsAndDuplicates,
