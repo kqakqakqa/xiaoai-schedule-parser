@@ -1,6 +1,6 @@
 /**
- * 模板_provider-only
- * @version 0.2
+ * 模板_全流程
+ * @version 0.3
  * @param { Document | string } iframeContent 获取的网页元素
  * @param { Document | string } frameContent 获取的网页元素
  * @param { Document | string } dom 获取的网页元素
