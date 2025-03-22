@@ -8,7 +8,7 @@
  */
 async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom = document) { // todo: 重复点击导入按钮
 
-  const logFrame = (await newLogFrame()) ?? { log: Function(), copyButton: Function(), repoLink: Function() }; // 输出提示栏
+  const logFrame = (newLogFrame ? (await newLogFrame()) : undefined) ?? { log: Function(), copyButton: Function(), repoLink: Function() }; // 输出提示栏
 
   logFrame.log("开始导入<br />");
 
@@ -20,11 +20,13 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
   /* 获取课程 */
   const iframeElement = document.querySelector("iframe#f_1");
-  const iframeDocument = iframeElement?.contentDocument || iframeElement?.contentWindow?.document;
-  const drpWeeks = Array.from(iframeDocument.getElementById("drpWeeks").options).map(e => e.value).filter(v => parseInt(v) !== 0).sort((a, b) => a - b);
+  const coursesDocument = iframeElement?.contentDocument ?? iframeElement?.contentWindow?.document ?? document;
+  const drpWeeksElement = coursesDocument?.querySelector("#drpWeeks");
+  const drpWeeks = Array.from(drpWeeksElement.options).map(e => parseInt(e.value)).filter(v => v !== 0).sort((a, b) => a - b);
   const courses = [];
+  let timestamp;
   for (const week of drpWeeks) {
-    courses.push(await getCoursesFromOneWeek(week));
+    courses.push(...await getCoursesFromOneWeek(week));
   }
 
   async function getCoursesFromOneWeek(week) {
@@ -38,11 +40,11 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
           "content-type": "application/x-www-form-urlencoded"
         },
         body: new URLSearchParams({
-          "__VIEWSTATE": iframeDocument.querySelector("#__VIEWSTATE").value,
-          "__VIEWSTATEGENERATOR": iframeDocument.querySelector("#__VIEWSTATEGENERATOR").value,
-          "__EVENTVALIDATION": iframeDocument.querySelector("#__EVENTVALIDATION").value,
-          "btnSearch": iframeDocument.querySelector("#btnSearch")?.value ?? "查询",
-          "drpSemester": iframeDocument.querySelector("#drpSemester").value,
+          "__VIEWSTATE": coursesDocument.querySelector("#__VIEWSTATE").value,
+          "__VIEWSTATEGENERATOR": coursesDocument.querySelector("#__VIEWSTATEGENERATOR").value,
+          "__EVENTVALIDATION": coursesDocument.querySelector("#__EVENTVALIDATION").value,
+          "btnSearch": coursesDocument.querySelector("#btnSearch")?.value ?? "查询",
+          "drpSemester": coursesDocument.querySelector("#drpSemester").value,
           "drpWeeks": week,
         }).toString(),
         method: "POST",
@@ -66,19 +68,21 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       return "do not continue";
     }
 
-    logFrame.log(logFrame.copyButton(responseStr), "<br />");
+    logFrame.log("获得第" + week + "周数据, 长度" + responseStr.length + " ", logFrame.copyButton(responseStr), "<br />");
 
     logFrame.log("识别第" + week + "周数据<br />");
-    const doc = new DOMParser.parseFromString(responseStr, 'text/html');
+    const doc = new DOMParser().parseFromString(responseStr, 'text/html');
     const coursesRaw = doc.querySelector("#dvReport").querySelectorAll(".pkScheduleTime");
+
 
     const courses = [];
     for (const courseRaw of coursesRaw) {
-      if (courseRaw.innerText.replace(/\s/g, "") === "") continue;
+      console.log(courseRaw)
+      if (courseRaw?.innerText?.replace(/\s/g, "") === "") continue;
 
-      const name = courseRaw.childNodes[0].nodeValue.trim();
-      const teacher = courseRaw.querySelectorAll(".scheduleWeek")[0].innerText.trim();
-      const position = courseRaw.querySelectorAll(".scheduleWeek")[1].innerText.trim();
+      const name = courseRaw.childNodes[0]?.nodeValue?.trim() ?? "-";
+      const teacher = courseRaw.querySelectorAll(".scheduleWeek")[0]?.innerText.trim() ?? "";
+      const position = courseRaw.querySelectorAll(".scheduleWeek")[1]?.innerText.trim() ?? "";
       const idParts = courseRaw.id.match(/node_(\d+)_(\d+)/);
       const day = parseInt(idParts[1]);
       const startSection = parseInt(idParts[2]);
@@ -99,10 +103,22 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
     }
     logFrame.log("第" + week + "周共" + courses.length + "门课 ", logFrame.copyButton(courses), "<br />");
+
+    // 顺便获取学期开始时间
+    if (week === 1) {
+      try {
+        const date = new Date(doc.querySelectorAll(".pkScheduleWeek")[0].childNodes[2].nodeValue.trim());  // 创建日期对象
+        date.setDate(date.getDate() - 1);
+        timestamp = date.getTime().toString();
+      } catch (err) {
+        logFrame.log(err.message);
+      }
+    }
+
     return courses;
   }
 
-  logFrame.log("共" + courses.length + "门课 ", logFrame.copyButton(courses), "<br />");
+  logFrame.log("共" + courses.length + "门课 ", logFrame.copyButton(JSON.stringify(courses)), "<br />");
 
   /* 课程后处理 */
   const postProcessings = coursesPostProcessings();
@@ -124,7 +140,25 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   }
 
   /* 获取时间表 */
-  const timetable = {};
+  const timetable = {
+    totalWeek: drpWeeks[drpWeeks.length - 1],
+    startSemester: timestamp,
+    forenoon: 4,
+    afternoon: 4,
+    night: 2,
+    sections: [
+      { section: 1, startTime: '08:40', endTime: '09:25' },
+      { section: 2, startTime: '09:25', endTime: '10:05' },
+      { section: 3, startTime: '10:20', endTime: '11:00' },
+      { section: 4, startTime: '11:05', endTime: '11:45' },
+      { section: 5, startTime: '14:30', endTime: '15:10' },
+      { section: 6, startTime: '15:15', endTime: '15:55' },
+      { section: 7, startTime: '16:10', endTime: '16:50' },
+      { section: 8, startTime: '16:55', endTime: '17:35' },
+      { section: 9, startTime: '19:30', endTime: '20:10' },
+      { section: 10, startTime: '20:15', endTime: '20:55' },
+    ],
+  };
 
   // const timetable = {
   //   totalWeek: 1, // 总周数：[1, 30]之间的整数
@@ -135,21 +169,21 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   //   afternoon: 1, // 下午课程节数：[0, 10]之间的整数
   //   night: 1, // 晚间课程节数：[0, 10]之间的整数
   //   sections: [
-  //     {
-  //       section: 1,
-  //       startTime: "08:00",
-  //       endTime: "12:00",
-  //     },
-  //     {
-  //       section: 2,
-  //       startTime: "12:00",
-  //       endTime: "16:00",
-  //     },
-  //     {
-  //       section: 3,
-  //       startTime: "16:00",
-  //       endTime: "20:00",
-  //     }
+  //   {
+  //     section: 1,
+  //     startTime: "08:00",
+  //     endTime: "12:00",
+  //   },
+  //   {
+  //     section: 2,
+  //     startTime: "12:00",
+  //     endTime: "16:00",
+  //   },
+  //   {
+  //     section: 3,
+  //     startTime: "16:00",
+  //     endTime: "20:00",
+  //   }
   //   ], // 课程时间表，注意：总长度要和上边配置的节数加和对齐
   // };
 
@@ -176,9 +210,9 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
 
   /**
-       * 通用课程后处理
-       * @version 0.12.7f27d73
-       */
+     * 通用课程后处理
+     * @version 0.12.7f27d73
+     */
   function coursesPostProcessings() {
     // 粘贴到此处
   }

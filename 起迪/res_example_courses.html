@@ -1,0 +1,305 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head id="Head1">
+  <title>
+    我的课表
+  </title>
+</head>
+
+<body>
+  <form method="post" action="./StuCourseSchedule.aspx" id="form1">
+    <div class="aspNetHidden">
+      <input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+      <input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+      <input type="hidden" name="__LASTFOCUS" id="__LASTFOCUS" value="" />
+      <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="s54phvZK5GYCY/vlX7A...M1ufpTrYWB8QG9FFg==" />
+    </div>
+    ...
+    <div class="aspNetHidden">
+      <input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="F95735A2" />
+      <input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION"
+        value="dzXB23YxSd7wK8yAEdjIpuN...wZqQjSBncC18I0O6RRHDlzLouKi65FbhvZM8=" />
+    </div>
+    ...
+    <table cellpadding="1" cellspacing="1" border="0">
+      ...
+    </table>
+    <table cellpadding="1" cellspacing="1">
+      <tr>
+        <td>授课学期：</td>
+        <td>
+          <select name="drpSemester" onchange="/* ... */" id="drpSemester">
+            <option selected="selected" value="113">2024-2025-2</option>
+            <option value="112">2024-2025-1</option>
+            <option value="109">2023-2024-2</option>
+            <option value="108">2023-2024-1</option>
+            <option value="107">2022-2023-2</option>
+            <option value="106">2022-2023-1</option>
+            <option value="105">2021-2022-2</option>
+            <option value="104">2021-2022-1</option>
+            <option value="103">2020-2021-2</option>
+            <option value="102">2020-2021-1</option>
+            <option value="101">2019-2020-2</option>
+            <option value="100">2019-2020-1</option>
+            <option value="99">2018-2019-2</option>
+            <option value="98">2018-2019-1</option>
+            <option value="97">2017-2018-2</option>
+            <option value="96">2017-2018-1</option>
+            <option value="95">2016-2017-2</option>
+            <option value="94">2016-2017-1</option>
+            <option value="93">2015-2016-2</option>
+            <option value="92">2015-2016-1</option>
+            <option value="91">2014-2015-2</option>
+            <option value="89">2014-2015-1</option>
+            <option value="88">2013-2014-2</option>
+            <option value="63">2013-2014-1</option>
+          </select>
+        </td>
+        <td>周次列表：</td>
+        <td>
+          <select name="drpWeeks" id="drpWeeks">
+            <option value="0">全部</option>
+            <option selected="selected" value="1">第1周</option>
+            <option value="2">第2周</option>
+            <option value="3">第3周</option>
+            <option value="4">第4周</option>
+            <option value="5">第5周</option>
+            <option value="6">第6周</option>
+            <option value="7">第7周</option>
+            <option value="8">第8周</option>
+            <option value="9">第9周</option>
+            <option value="10">第10周</option>
+            <option value="11">第11周</option>
+            <option value="12">第12周</option>
+            <option value="13">第13周</option>
+            <option value="14">第14周</option>
+            <option value="15">第15周</option>
+            <option value="16">第16周</option>
+            <option value="17">第17周</option>
+            <option value="18">第18周</option>
+            <option value="19">第19周</option>
+          </select>
+        </td>
+      </tr>
+    </table>
+    <div id="dvReport">
+      <table cellpadding="0" cellspacing="0" border="0" class="pkSchedule">
+        <tr>
+          <td class="pkScheduleTitle" colspan="6">我的课表</td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">节次/星期</td>
+          <td id="weekIndex_1" title="pkDay_2025-03-03" class="pkScheduleWeek">
+            星期一
+            <br />
+            2025-03-03
+          </td>
+          <td id="weekIndex_2" title="pkDay_2025-03-04" class="pkScheduleWeek">
+            星期二
+            <br />
+            2025-03-04
+          </td>
+          <td id="weekIndex_3" title="pkDay_2025-03-05" class="pkScheduleWeek">
+            星期三
+            <br />
+            2025-03-05
+          </td>
+          <td id="weekIndex_4" title="pkDay_2025-03-06" class="pkScheduleWeek">
+            星期四
+            <br />
+            2025-03-06
+          </td>
+          <td id="weekIndex_5" title="pkDay_2025-03-07" class="pkScheduleWeek">
+            星期五
+            <br />
+            2025-03-07
+          </td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">第一节</td>
+          <td id="node_1_1" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <font style="color:#FF0000;">(合)</font>
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="showSchedule(3,522,1,113);">教室名称</span>
+          </td>
+          <td id="node_2_1" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <font style="color:#FF0000;">(合)</font>
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_3_1" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_4_1" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <font style="color:#FF0000;">(合)</font>
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_5_1" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">第二节</td>
+          <td id="node_3_2" class="pkScheduleTime">&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">第三节</td>
+          <td id="node_1_3" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <font style="color:#FF0000;">(合)</font>
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_2_3" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_3_3" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_4_3" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_5_3" class="pkScheduleTime">&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">第四节</td>
+          <td id="node_5_4" class="pkScheduleTime">&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">中午</td>
+          <td class="pkScheduleTime" colspan="5">&nbsp;</td>
+        <tr>
+          <td class="pkScheduleNode">第五节</td>
+          <td id="node_1_5" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_2_5" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <font style="color:#FF0000;">(合)</font>
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_3_5" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_4_5" rowspan="2" class="pkScheduleTime">
+            体育与健康Ⅱ#2024专业1班(1)
+            <br />
+            羽毛球17班
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+          </td>
+          <td id="node_5_5" class="pkScheduleTime">&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">第六节</td>
+          <td id="node_5_6" class="pkScheduleTime">&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">第七节</td>
+          <td id="node_1_7" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_2_7" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_3_7" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_4_7" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_5_7" class="pkScheduleTime">&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">第八节</td>
+          <td id="node_1_8" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_4_8" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_5_8" class="pkScheduleTime">&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">晚上</td>
+          <td class="pkScheduleTime" colspan="5">&nbsp;</td>
+        <tr>
+          <td class="pkScheduleNode">第九节</td>
+          <td id="node_1_9" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_2_9" rowspan="2" class="pkScheduleTime">
+            课程名称
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教师名称</span>
+            (1)
+            <br />
+            <span class="scheduleWeek" onclick="/* ... */">教室名称</span>
+          </td>
+          <td id="node_3_9" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_4_9" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_5_9" class="pkScheduleTime">&nbsp;</td>
+        </tr>
+        <tr>
+          <td class="pkScheduleNode">第十节</td>
+          <td id="node_1_10" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_3_10" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_4_10" class="pkScheduleTime">&nbsp;</td>
+          <td id="node_5_10" class="pkScheduleTime">&nbsp;</td>
+        </tr>
+      </table>
+    </div>
+    ...
+  </form>
+</body>
+
+</html>
