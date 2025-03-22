@@ -1,6 +1,6 @@
 /**
  * 模板_全流程
- * @version 0.3
+ * @version 0.4
  * @param { Document | string } iframeContent 获取的网页元素
  * @param { Document | string } frameContent 获取的网页元素
  * @param { Document | string } dom 获取的网页元素
@@ -35,11 +35,11 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   try {
     tryResponse = await fetch("");
     if (!tryResponse.ok) {
-      logFrame.log(`<b>导入失败</b><br />网络请求失败: "${tryResponse.status} ${tryResponse.statusText}"<br />请确保教务系统已登录<br /><br />`, logFrame.repoLink());
+      logFrame.log(`<b>导入失败</b><br />网络请求失败: "${tryResponse.status} ${tryResponse.statusText}", 请确保教务系统已登录<br /><br />`, logFrame.repoLink());
       return "do not continue";
     }
   } catch (err) {
-    logFrame.log(`<b>导入失败</b><br />网络请求失败: "${err?.message ?? err}"<br />请确保教务系统已登录<br /><br />`, logFrame.repoLink());
+    logFrame.log(`<b>导入失败</b><br />网络请求失败: "${err?.message ?? err}", 请确保教务系统已登录<br /><br />`, logFrame.repoLink());
     return "do not continue";
   }
   const response = tryResponse;
@@ -48,7 +48,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   try {
     tryResponseStr = await response.text();
   } catch (err) {
-    logFrame.log(`<b>导入失败</b><br />解析响应数据失败: "${err?.message ?? err}"<br />请确保教务系统已登录<br /><br />`, logFrame.repoLink());
+    logFrame.log(`<b>导入失败</b><br />解析响应数据失败: "${err?.message ?? err}", 请确保教务系统已登录<br /><br />`, logFrame.repoLink());
     return "do not continue";
   }
   const responseStr = tryResponseStr;
@@ -76,9 +76,14 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   /* 课程后处理 */
   let tryPostProcessings;
   try {
-    tryPostProcessings = postProcessings?.();
-    if (tryPostProcessings === undefined) {
+    tryPostProcessings = postProcessings();
+    if (
+      typeof tryPostProcessings?.mergeConflictsAndDuplicates !== "function" ||
+      typeof tryPostProcessings?.mergeWeeks !== "function" ||
+      typeof tryPostProcessings?.mergeTeachersOrPositions !== "function"
+    ) {
       logFrame.log("初始化课程后处理失败, 将跳过课程后处理<br />");
+      tryPostProcessings = undefined;
     }
   } catch (err) {
     logFrame.log(`初始化课程后处理失败: "${err?.message ?? err}", 将跳过课程后处理<br />`);
@@ -92,7 +97,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   try {
     tryCourses1 = postProcessings.mergeConflictsAndDuplicates(courses);
     if (tryCourses === undefined) {
-      logFrame.log(`处理冲突课程失败, <br />将跳过处理冲突课程<br />`);
+      logFrame.log(`处理冲突课程失败, 将跳过处理冲突课程<br />`);
     }
   } catch (err) {
     logFrame.log(`处理冲突课程失败: "${err?.message ?? err}", 将跳过处理冲突课程<br />`);
@@ -105,7 +110,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   try {
     tryCourses2 = postProcessings.mergeWeeks(courses1);
     if (tryCourses2 === undefined) {
-      logFrame.log(`合并课程失败, <br />将跳过合并课程<br />`);
+      logFrame.log(`合并课程失败, 将跳过合并课程<br />`);
     }
   } catch (err) {
     logFrame.log(`合并课程失败: "${err?.message ?? err}", 将跳过合并课程<br />`);
@@ -120,7 +125,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     try {
       tryCourses3 = postProcessings.mergeTeachersOrPositions(courses2, mergePositions = true, mergeTeachers = true);
       if (tryCourses3 === undefined) {
-        logFrame.log(`合并课程失败, <br />将跳过合并课程<br />`);
+        logFrame.log(`合并课程失败, 将跳过合并课程<br />`);
       }
     } catch (err) {
       logFrame.log(`合并课程失败: "${err?.message ?? err}", 将跳过合并课程<br />`);
@@ -161,12 +166,13 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     //   ], // 时间表，节数要和上边配置的节数相同
     // };
     if (tryTimetable === undefined) {
-      logFrame.log(`获取时间表失败, <br />将跳过获取时间表<br />`);
+      logFrame.log(`获取时间表失败, 将跳过获取时间表<br />`);
     }
   } catch (err) {
     logFrame.log(`获取时间表失败: "${err?.message ?? err}", 将跳过获取时间表<br />`);
   }
   const timetable = tryTimetable ?? {};
+
   if (typeof timetable === "object" && Object.keys(timetable).length === 0) {
     logFrame.log("没有配置时间表 <br />");
   } else {
@@ -191,9 +197,9 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
 
   /**
-       * 通用课程后处理
-       * @version 0.12.7f27d73
-       */
+   * 通用课程后处理
+   * @version 0.12.7f27d73
+   */
   function coursesPostProcessings() {
     // 粘贴到此处
   }
