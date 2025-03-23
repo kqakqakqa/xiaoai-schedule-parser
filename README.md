@@ -4,7 +4,7 @@
 
 ## 适配学校
 
-[福建医科大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/tree/福建医科大学/新正方V9.0_request/provider.js)
+[福建医科大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/福建医科大学/新正方V9.0_request/provider.js)
 
 ## 相关资源
 
