@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabulator CSV 实时搜索</title>
+</head>
+
+<body>
+
+  <h1>其他开发者的适配项目</h1>
+
+  <div>
+    <label for="search-input">搜索：</label>
+    <input id="search-input" type="text" placeholder="支持正则表达式">
+  </div>
+
+  <div id="table">加载中...</div>
+
+</body>
+
+<style>
+  body {
+    margin: 0;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    height: 100vh;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    row-gap: 1rem;
+    column-gap: 1rem;
+  }
+
+  #search-input {
+    padding: 0.5rem;
+    width: 20rem;
+
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+  }
+
+  #search-input:hover {
+    border: 1px solid #aaa;
+  }
+</style>
+
+<link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator.min.css" rel="stylesheet">
+
+<style>
+  .tabulator {
+    height: 0;
+    flex: 1;
+    max-width: 80%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    border-radius: 0.5rem;
+    overflow: auto;
+    font-size: 1rem;
+  }
+
+  .tabulator .tabulator-header .tabulator-col,
+  .tabulator .tabulator-header,
+  .tabulator-row .tabulator-cell {
+    border: none;
+  }
+
+  .tabulator {
+    background-color: transparent;
+  }
+</style>
+
+<script src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+<script>
+  otherRepos();
+
+  async function otherRepos() {
+    const response = await fetch("other-repos.csv");
+    const csvData = await response.text();
+    const parsedData = Papa.parse(csvData, { header: true }).data;
+
+    const table = new Tabulator("#table", {
+      data: parsedData,
+      autoColumns: true,
+      layout: "fitDataStretch",
+      headerFilter: true,
+      movableRows: false,
+      movableColumns: false,
+      resizableRows: true,
+      resizableColumns: true,
+    });
+
+    document.getElementById("search-input").addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+      if (query) {
+        try {
+          const regex = new RegExp(query, "i");
+          table.setFilter((data) => {
+            return Object.values(data).some(value => regex.test(String(value)));
+          });
+        } catch (e) {
+          table.setFilter((data) => {
+            return Object.values(data).some(value => String(value));
+          });
+        }
+      } else {
+        table.clearFilter();
+      }
+    });
+  }
+</script>
+
+</html>
