@@ -1,6 +1,6 @@
 /**
  * 模板_全流程
- * @version 0.6
+ * @version 0.7
  * @param { Document | string } iframeContent 获取的网页元素
  * @param { Document | string } frameContent 获取的网页元素
  * @param { Document | string } dom 获取的网页元素
@@ -83,7 +83,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   /* 课程后处理 */
   let tryPostProcessings;
   try {
-    tryPostProcessings = postProcessings();
+    tryPostProcessings = coursesPostProcessings();
 
     if (
       typeof tryPostProcessings?.mergeConflictsAndDuplicates !== "function" ||
