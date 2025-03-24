@@ -1,6 +1,6 @@
 /**
  * 基于模板_全流程
- * @version 0.4.7e7577c
+ * @version 0.5.e769f1a
  * @param { Document | string } iframeContent 获取的网页元素
  * @param { Document | string } frameContent 获取的网页元素
  * @param { Document | string } dom 获取的网页元素
@@ -12,10 +12,12 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   let tryLogFrame;
   try {
     tryLogFrame = await newLogFrame();
+
     if (typeof tryLogFrame?.log !== "function" || typeof tryLogFrame?.copyButton !== "function" || typeof tryLogFrame?.repoLink !== "function") {
       console.error("初始化输出提示栏失败, 将不会有输出提示");
       tryLogFrame = undefined;
     }
+
   } catch (err) {
     console.error(`初始化输出提示栏失败: "${err?.message ?? err}", 将不会有输出提示`);
   }
@@ -38,6 +40,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     const coursesDocument = iframeElement?.contentDocument ?? iframeElement?.contentWindow?.document ?? document;
     const drpWeeksElement = coursesDocument?.querySelector("#drpWeeks");
     tryDrpWeeks = Array.from(drpWeeksElement.options).map(e => parseInt(e.value)).filter(v => v !== 0 && v !== NaN).sort((a, b) => a - b);
+
   } catch (err) {
     logFrame.log(`<b>导入失败</b><br />获取课程周数列表失败: "${err?.message ?? err}", 请确保教务系统已登录<br /><br />`, logFrame.repoLink());
     return "do not continue";
@@ -69,11 +72,16 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
         logFrame.log(`<b>导入失败</b><br />获取第${week}周请求参数失败, 请确保教务系统已登录<br /><br />`);
         return "do not continue";
       }
+
     } catch (err) {
       logFrame.log(`<b>导入失败</b><br />获取第${week}周请求参数失败: "${err?.message ?? err}", 请确保教务系统已登录<br /><br />`);
       return "do not continue";
     }
-    const { VIEWSTATE, VIEWSTATEGENERATOR, EVENTVALIDATION, btnSearch, drpSemester } = { tryVIEWSTATE, tryVIEWSTATEGENERATOR, tryEVENTVALIDATION, tryBtnSearch, tryDrpSemester };
+    const VIEWSTATE = tryVIEWSTATE;
+    const VIEWSTATEGENERATOR = tryVIEWSTATEGENERATOR;
+    const EVENTVALIDATION = tryEVENTVALIDATION;
+    const btnSearch = tryBtnSearch;
+    const drpSemester = tryDrpSemester;
 
 
     /* 获取课程数据 */
@@ -96,10 +104,12 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
         method: "POST",
         credentials: "include",
       });
+
       if (!tryResponse.ok) {
         logFrame.log(`<b>导入失败</b><br />网络请求失败: "${tryResponse.status} ${tryResponse.statusText}", 请确保教务系统已登录<br /><br />`, logFrame.repoLink());
         return "do not continue";
       }
+
     } catch (err) {
       logFrame.log(`<b>导入失败</b><br />网络请求失败: "${err?.message ?? err}", 请确保教务系统已登录<br /><br />`, logFrame.repoLink());
       return "do not continue";
@@ -109,6 +119,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     let tryResponseStr;
     try {
       tryResponseStr = await response.text();
+
     } catch (err) {
       logFrame.log(`<b>导入失败</b><br />解析响应数据失败: "${err?.message ?? err}", 请确保教务系统已登录<br /><br />`, logFrame.repoLink());
       return "do not continue";
@@ -154,6 +165,11 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
         });
       }
 
+      if (tryCoursesOfWeek === undefined) {
+        logFrame.log(`<b>导入失败</b><br />识别课程数据失败<br /><br />`, logFrame.repoLink());
+        return "do not continue";
+      }
+
       /* 顺便获取学期开始时间 */
       if (week === 1) {
         logFrame.log(`获取学期开始时间<br />`);
@@ -166,15 +182,12 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
           if (tryTimestamp === undefined) {
             logFrame.log("获取学期开始时间失败, 将跳过获取学期开始时间<br />");
           }
+
         } catch (err) {
           logFrame.log(`获取学期开始时间失败: "${err?.message ?? err}", 将跳过获取学期开始时间<br />`);
         }
       }
 
-      if (tryCoursesOfWeek === undefined) {
-        logFrame.log(`<b>导入失败</b><br />识别课程数据失败<br /><br />`, logFrame.repoLink());
-        return "do not continue";
-      }
     } catch (err) {
       logFrame.log(`<b>导入失败</b><br />识别课程数据失败: "${err?.message ?? err}"<br /><br />`, logFrame.repoLink());
       return "do not continue";
@@ -202,6 +215,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   let tryPostProcessings;
   try {
     tryPostProcessings = postProcessings();
+
     if (
       typeof tryPostProcessings?.mergeConflictsAndDuplicates !== "function" ||
       typeof tryPostProcessings?.mergeWeeks !== "function" ||
@@ -210,6 +224,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       logFrame.log("初始化课程后处理失败, 将跳过课程后处理<br />");
       tryPostProcessings = undefined;
     }
+
   } catch (err) {
     logFrame.log(`初始化课程后处理失败: "${err?.message ?? err}", 将跳过课程后处理<br />`);
   }
@@ -221,9 +236,11 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   let tryCourses1;
   try {
     tryCourses1 = postProcessings.mergeConflictsAndDuplicates(courses);
+
     if (tryCourses === undefined) {
       logFrame.log(`处理冲突课程失败, 将跳过处理冲突课程<br />`);
     }
+
   } catch (err) {
     logFrame.log(`处理冲突课程失败: "${err?.message ?? err}", 将跳过处理冲突课程<br />`);
   }
@@ -234,9 +251,11 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   let tryCourses2;
   try {
     tryCourses2 = postProcessings.mergeWeeks(courses1);
+
     if (tryCourses2 === undefined) {
       logFrame.log(`合并课程失败, 将跳过合并课程<br />`);
     }
+
   } catch (err) {
     logFrame.log(`合并课程失败: "${err?.message ?? err}", 将跳过合并课程<br />`);
   }
@@ -249,9 +268,11 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     logFrame.log("合并不同教师/教室的相同课程<br />");
     try {
       tryCourses3 = postProcessings.mergeTeachersOrPositions(courses2, mergePositions = true, mergeTeachers = true);
+
       if (tryCourses3 === undefined) {
         logFrame.log(`合并课程失败, 将跳过合并课程<br />`);
       }
+
     } catch (err) {
       logFrame.log(`合并课程失败: "${err?.message ?? err}", 将跳过合并课程<br />`);
     }
@@ -297,6 +318,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     if (tryTimetable === undefined) {
       logFrame.log(`获取时间表失败, 将跳过获取时间表<br />`);
     }
+
   } catch (err) {
     logFrame.log(`获取时间表失败: "${err?.message ?? err}", 将跳过获取时间表<br />`);
   }
