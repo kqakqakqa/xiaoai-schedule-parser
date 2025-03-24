@@ -1,6 +1,6 @@
 /**
  * 模板_全流程
- * @version 0.5
+ * @version 0.6
  * @param { Document | string } iframeContent 获取的网页元素
  * @param { Document | string } frameContent 获取的网页元素
  * @param { Document | string } dom 获取的网页元素
@@ -90,12 +90,15 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       typeof tryPostProcessings?.mergeWeeks !== "function" ||
       typeof tryPostProcessings?.mergeTeachersOrPositions !== "function"
     ) {
-      logFrame.log("初始化课程后处理失败, 将跳过课程后处理<br />");
+      logFrame.log("<b>初始化课程后处理失败, </b>将跳过课程后处理<br />3秒后继续...<br />");
+      await new Promise(e => setTimeout(e, 3000));
       tryPostProcessings = undefined;
     }
 
   } catch (err) {
-    logFrame.log(`初始化课程后处理失败: "${err?.message ?? err}", 将跳过课程后处理<br />`);
+    logFrame.log(`<b>初始化课程后处理失败: </b>"${err?.message ?? err}", 将跳过课程后处理<br />3秒后继续...<br />`);
+    await new Promise(e => setTimeout(e, 3000));
+
   }
   const postProcessings = tryPostProcessings ?? { mergeConflictsAndDuplicates: a => a, mergeWeeks: a => a, mergeTeachersOrPositions: a => a };
 
@@ -107,11 +110,13 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     tryCourses1 = postProcessings.mergeConflictsAndDuplicates(courses);
 
     if (tryCourses === undefined) {
-      logFrame.log(`处理冲突课程失败, 将跳过处理冲突课程<br />`);
+      logFrame.log(`<b>处理冲突课程失败, </b>将跳过处理冲突课程<br />3秒后继续...<br />`);
+      await new Promise(e => setTimeout(e, 3000));
     }
 
   } catch (err) {
-    logFrame.log(`处理冲突课程失败: "${err?.message ?? err}", 将跳过处理冲突课程<br />`);
+    logFrame.log(`<b>处理冲突课程失败: </b>"${err?.message ?? err}", 将跳过处理冲突课程<br />3秒后继续...<br />`);
+    await new Promise(e => setTimeout(e, 3000));
   }
   const courses1 = tryCourses1 ?? courses;
   logFrame.log(`处理后还有${courses1?.length}门课程 `, logFrame.copyButton(JSON.stringify(courses1)), "<br />");
@@ -122,11 +127,13 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     tryCourses2 = postProcessings.mergeWeeks(courses1);
 
     if (tryCourses2 === undefined) {
-      logFrame.log(`合并课程失败, 将跳过合并课程<br />`);
+      logFrame.log(`<b>合并课程失败, </b>将跳过合并课程<br />3秒后继续...<br />`);
+      await new Promise(e => setTimeout(e, 3000));
     }
 
   } catch (err) {
-    logFrame.log(`合并课程失败: "${err?.message ?? err}", 将跳过合并课程<br />`);
+    logFrame.log(`<b>合并课程失败: </b>"${err?.message ?? err}", 将跳过合并课程<br />3秒后继续...<br />`);
+    await new Promise(e => setTimeout(e, 3000));
   }
   const courses2 = tryCourses2 ?? courses1;
   logFrame.log(`合并后还有${courses2?.length}门课程 `, logFrame.copyButton(JSON.stringify(courses2)), "<br />");
@@ -139,11 +146,13 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       tryCourses3 = postProcessings.mergeTeachersOrPositions(courses2, mergePositions = true, mergeTeachers = true);
 
       if (tryCourses3 === undefined) {
-        logFrame.log(`合并课程失败, 将跳过合并课程<br />`);
+        logFrame.log(`<b>合并课程失败, </b>将跳过合并课程<br />3秒后继续...<br />`);
+        await new Promise(e => setTimeout(e, 3000));
       }
 
     } catch (err) {
-      logFrame.log(`合并课程失败: "${err?.message ?? err}", 将跳过合并课程<br />`);
+      logFrame.log(`<b>合并课程失败: </b>"${err?.message ?? err}", 将跳过合并课程<br />3秒后继续...<br />`);
+      await new Promise(e => setTimeout(e, 3000));
     }
     courses3 = tryCourses3 ?? courses2;
     logFrame.log(`合并后还有${courses3?.length}门课程 `, logFrame.copyButton(JSON.stringify(courses3)), "<br />");
@@ -151,9 +160,9 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
   /* 获取时间表 */
   logFrame.log("获取时间表<br />");
+
   let tryTimetable;
   try {
-    tryTimetable = {};
     // tryTimetable = {
     //   totalWeek: 1, // 总周数, [1, 30]之间的int
     //   startSemester: '', // 开学时间, 时间戳, 13位长度string
@@ -180,12 +189,16 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     //     }
     //   ], // 时间表，节数要和上边配置的节数相同
     // };
+    tryTimetable = {};
+
     if (tryTimetable === undefined) {
-      logFrame.log(`获取时间表失败, 将跳过获取时间表<br />`);
+      logFrame.log(`<b>获取时间表失败, </b>将跳过获取时间表<br />3秒后继续...<br />`);
+      await new Promise(e => setTimeout(e, 3000));
     }
 
   } catch (err) {
-    logFrame.log(`获取时间表失败: "${err?.message ?? err}", 将跳过获取时间表<br />`);
+    logFrame.log(`<b>获取时间表失败: </b>"${err?.message ?? err}", 将跳过获取时间表<br />3秒后继续...<br />`);
+    await new Promise(e => setTimeout(e, 3000));
   }
   const timetable = tryTimetable ?? {};
 
