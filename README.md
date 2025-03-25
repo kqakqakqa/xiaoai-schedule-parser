@@ -6,6 +6,10 @@
 
 [福建医科大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/福建医科大学/新正方V9.0_request/provider.js)
 
+[福建师范大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/福建师范大学/新正方V9.0_request/provider.js)
+
+[苏州科技大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/苏州科技大学/新正方V9.0_request/provider.js)
+
 ## 相关资源
 
 [小爱课程表开发者工具使用教程](https://open-schedule-prod.ai.xiaomi.com/docs/#/help/) 官方文档
