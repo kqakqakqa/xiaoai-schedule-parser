@@ -26,7 +26,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   logFrame.log("开始导入<br />");
 
   /* 页面检测 */
-  if (!document.URL.includes("/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html")) {
+  if (!document.URL.includes("/xskbcx_cxXskbcxIndex.html")) {
     logFrame.log(`<b>导入失败</b><br />页面不正确, 请确保当前位于 "学生课表查询" 页面<br /><br />`, logFrame.repoLink());
     return "do not continue";
   }
