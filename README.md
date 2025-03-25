@@ -4,11 +4,13 @@
 
 ## 适配学校
 
-[福建医科大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/福建医科大学/新正方V9.0_request/provider.js)
+[汉口学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/汉口学院/新正方V9.0_request/provider.js)
+
+[苏州科技大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/苏州科技大学/新正方V9.0_request/provider.js)
 
 [福建师范大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/福建师范大学/新正方V9.0_request/provider.js)
 
-[苏州科技大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/苏州科技大学/新正方V9.0_request/provider.js)
+[福建医科大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/福建医科大学/新正方V9.0_request/provider.js)
 
 ## 相关资源
 
