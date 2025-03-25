@@ -58,7 +58,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   logFrame.log("获取课程数据...<br />");
   let tryResponse;
   try {
-    tryResponse = await fetch("/jwglxt/kbcx/xskbcx_cxXsgrkb.html", { // todo: 网址可能是"https://webvpn.example.edu.cn/http/.../jwglxt/kbcx/xskbcx_cxXsgrkb.html", "/jwglxt/kbcx/xskbcxMobile_cxXsKb.html"
+    tryResponse = await fetch("./xskbcx_cxXsgrkb.html", { // todo: 网址可能是"/jwglxt/kbcx/xskbcxMobile_cxXsKb.html"
       method: "POST",
       credentials: "include",
       headers: {
@@ -278,7 +278,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
       let tryResponse2;
       try {
-        tryResponse2 = await fetch("/jwglxt/kbcx/xskbcx_cxRjc.html", { // todo: 网址可能是"/jzgl/skxxMobile_cxRsdjc.html", "/jwglxt/jzgl/skxxMobile_cxRsdjc.html", "/kbcx/xskbcx_cxRjc.html"
+        tryResponse2 = await fetch("./xskbcx_cxRjc.html", { // todo: 网址可能是"/jwglxt/jzgl/skxxMobile_cxRsdjc.html"
           method: "POST",
           credentials: "include",
           headers: {
