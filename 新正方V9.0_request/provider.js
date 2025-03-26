@@ -37,7 +37,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   try {
     tryXnm = document.querySelector("#xnm")?.value ?? document.querySelector("#xnm_hide")?.value; // 学年
     tryXqm = document.querySelector("#xqm")?.value ?? document.querySelector("#xqm_hide")?.value; // 学期
-    tryGnmkdm = document.querySelector("#gnmkdm")?.value ?? "";
+    tryGnmkdm = document.querySelector("#gnmkdm")?.value ?? "N253508";
 
     if (typeof tryXnm !== "string" ||
       typeof tryXqm !== "string" ||
