@@ -37,7 +37,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   try {
     tryXnm = document.querySelector("#xnm")?.value ?? document.querySelector("#xnm_hide")?.value; // 学年
     tryXqm = document.querySelector("#xqm")?.value ?? document.querySelector("#xqm_hide")?.value; // 学期
-    tryGnmkdm = document.querySelector("#gnmkdm")?.value ?? "";
+    tryGnmkdm = document.querySelector("#gnmkdm")?.value ?? "N2151";
 
     if (typeof tryXnm !== "string" ||
       typeof tryXqm !== "string" ||
@@ -58,7 +58,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   logFrame.log("获取课程数据...<br />");
   let tryResponse;
   try {
-    tryResponse = await fetch("/jwglxt/kbcx/xskbcx_cxXsgrkb.html", { // todo: 网址可能是"https://webvpn.example.edu.cn/http/.../jwglxt/kbcx/xskbcx_cxXsgrkb.html", "/jwglxt/kbcx/xskbcxMobile_cxXsKb.html"
+    tryResponse = await fetch("./xskbcx_cxXsgrkb.html", { // todo: 网址可能是"https://webvpn.example.edu.cn/http/.../jwglxt/kbcx/xskbcx_cxXsgrkb.html", "/jwglxt/kbcx/xskbcxMobile_cxXsKb.html"
       method: "POST",
       credentials: "include",
       headers: {
