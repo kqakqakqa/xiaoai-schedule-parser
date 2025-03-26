@@ -278,7 +278,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
       let tryResponse2;
       try {
-        tryResponse2 = await fetch("/jwglxt/kbcx/xskbcx_cxRjc.html", { // todo: 网址可能是"/jzgl/skxxMobile_cxRsdjc.html", "/jwglxt/jzgl/skxxMobile_cxRsdjc.html", "/kbcx/xskbcx_cxRjc.html"
+        tryResponse2 = await fetch("./xskbcx_cxRjc.html", { // todo: 网址可能是"/jzgl/skxxMobile_cxRsdjc.html", "/jwglxt/jzgl/skxxMobile_cxRsdjc.html", "/kbcx/xskbcx_cxRjc.html"
           method: "POST",
           credentials: "include",
           headers: {
