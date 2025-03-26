@@ -1,6 +1,6 @@
 /**
  * 输出提示栏 需要有dom环境
- * @version 0.5
+ * @version 0.6
  */
 async function newLogFrame() {
   // 删除已存在frame
@@ -87,7 +87,20 @@ async function newLogFrame() {
     const copyButton = document.createElement("button");
     copyButton.textContent = "点击复制";
     copyButton.addEventListener("click", async e => {
-      await navigator.clipboard.writeText(textToCopy);
+      const clipboard = navigator.clipboard ?? {
+        writeText: async (s) => new Promise((resolve, reject) => {
+          const input = document.createElement('input');
+          input.style.position = "absolute";
+          input.style.left = "-100vw";
+          input.value = s;
+          document.body.append(input);
+          input.select();
+          document.execCommand('copy');
+          input.remove();
+          resolve();
+        })
+      };
+      await clipboard.writeText(textToCopy);
       e.target.textContent = "已复制";
     });
     return copyButton;
