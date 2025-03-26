@@ -4,6 +4,8 @@
 
 ## 适配学校
 
+[天津交通职业学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/天津交通职业学院/新正方V9.0_request/provider.js)
+
 [福州外语外贸学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/福州外语外贸学院/新正方V9.0_request/provider.js)
 
 [汉口学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/汉口学院/新正方V9.0_request/provider.js)
