@@ -4,6 +4,16 @@
 
 ## 适配学校
 
+[南宁职业技术学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/南宁职业技术学院/新正方V9.0_request/provider.js)
+
+[四川大学锦江学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/四川大学锦江学院/新正方V9.0_request/provider.js)
+
+[齐鲁师范学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/齐鲁师范学院/新正方V9.0_request/provider.js)
+
+[天津交通职业学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/天津交通职业学院/新正方V9.0_request/provider.js)
+
+[福州外语外贸学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/福州外语外贸学院/新正方V9.0_request/provider.js)
+
 [汉口学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/汉口学院/新正方V9.0_request/provider.js)
 
 [苏州科技大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/苏州科技大学/新正方V9.0_request/provider.js)
