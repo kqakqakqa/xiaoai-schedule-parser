@@ -72,13 +72,17 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   const defaultGnmkdm = undefined;
   const useSu = false;
   const useXsdm = true;
+  const useValidate = false;
 
-  let tryXnm, tryXqm, tryGnmkdm, trySu;
+  let tryXnm, tryXqm, tryGnmkdm, tryXsdm, trySu, tryValidate;
   try {
     tryXnm = document.querySelector("#xnm")?.value ?? document.querySelector("#xnm_hide")?.value; // 学年
     tryXqm = document.querySelector("#xqm")?.value ?? document.querySelector("#xqm_hide")?.value; // 学期
     tryGnmkdm = document.querySelector("#gnmkdm")?.value ?? defaultGnmkdm;
+    tryXsdm = document.querySelector("#xsdm")?.value ?? "";
     trySu = document.querySelector("#sessionUserKey")?.value;
+    tryValidate = document.querySelector("#xsdm")?.value;
+
 
   } catch (err) {
     logFrame.log(
@@ -93,15 +97,18 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   const xnm = tryXnm;
   const xqm = tryXqm;
   const gnmkdm = tryGnmkdm;
+  const xsdm = tryXsdm;
   const su = trySu;
+  const validate = tryValidate;
 
   const fetchBody = new URLSearchParams({
     xnm: xnm,
     xqm: xqm,
     gnmkdm: gnmkdm,
     kzlx: "ck",
-    ...(useXsdm ? { xsdm: "" } : {}),
+    ...(useXsdm ? { xsdm: xsdm } : {}),
     ...(useSu ? { su: su } : {}),
+    ...(useValidate ? { validate: validate } : {})
   }).toString();
 
   logFrame.log(
