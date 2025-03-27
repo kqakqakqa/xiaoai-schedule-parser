@@ -100,7 +100,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     xqm: xqm,
     gnmkdm: gnmkdm,
     kzlx: "ck",
-    ...(useXsdm ? { xsdm: xsdm } : {}),
+    ...(useXsdm ? { xsdm: "" } : {}),
     ...(useSu ? { su: su } : {}),
   }).toString();
 
