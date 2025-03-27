@@ -1,6 +1,6 @@
 /**
  * 输出提示栏 需要有dom环境
- * @version 0.7
+ * @version 0.8
  */
 async function newLogFrame() {
   // 删除已存在frame
@@ -129,6 +129,7 @@ async function newLogFrame() {
     const e = document.createElement("span");
     e.append("如果你需要，可以查看本适配项目源代码: ");
     e.append(codeBlock("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
+    e.append(" ");
     e.append(copyButton("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
     return e;
   }
