@@ -1,6 +1,6 @@
 /**
  * 输出提示栏 需要有dom环境
- * @version 0.5
+ * @version 0.7
  */
 async function newLogFrame() {
   // 删除已存在frame
@@ -39,18 +39,18 @@ async function newLogFrame() {
   //   }, 1);
   // });
   cardElement.style.cssText = `
-      display: block;
-      width: 100vh;
-      max-width: calc(80% - 40px);
-      max-height: calc(80% - 40px);
-      border: none;
-      border-radius: 10px;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.9);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      box-sizing: content-box;
-      overflow: hidden;
-    `;
+    display: block;
+    width: 100vh;
+    max-width: calc(80% - 40px);
+    max-height: calc(80% - 40px);
+    border: none;
+    border-radius: 10px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-sizing: content-box;
+    overflow: hidden;
+  `;
   const iframeDocument = cardElement.contentDocument || cardElement.contentWindow?.document;
   // 自动调整高度
   new MutationObserver(() => {
@@ -80,23 +80,57 @@ async function newLogFrame() {
 
   baseElement.log = log;
   baseElement.copyButton = copyButton;
+  baseElement.codeBlock = codeBlock;
+  baseElement.codeBlockShort = codeBlockShort;
   baseElement.repoLink = repoLink;
   return baseElement;
 
-  function copyButton(textToCopy) {
+
+  function copyButton(str) {
     const copyButton = document.createElement("button");
     copyButton.textContent = "点击复制";
     copyButton.addEventListener("click", async e => {
-      await navigator.clipboard.writeText(textToCopy);
+      const clipboard = navigator.clipboard ?? {
+        writeText: async (s) => new Promise(resolve => {
+          const input = document.createElement('input');
+          input.style.position = "absolute";
+          input.style.left = "-100vw";
+          input.value = s;
+          document.body.append(input);
+          input.select();
+          document.execCommand('copy');
+          input.remove();
+          resolve();
+        })
+      };
+      await clipboard.writeText(String(str));
       e.target.textContent = "已复制";
     });
     return copyButton;
   }
 
+  function codeBlock(str) {
+    const code = document.createElement("code");
+    code.style.cssText = `
+      background-color: #eee;
+      border-radius: 0.25em;
+      font-family: monospace;
+      padding: 0 0.5em;
+    `;
+    code.textContent = String(str);
+    return code;
+  }
+
+  function codeBlockShort(str) {
+    return codeBlock(String(str).replace(/^([\s\S]{10})[\s\S]*$/, "$1..."));
+  }
+
   function repoLink() {
     const e = document.createElement("span");
     e.append("如果你需要，可以查看本适配项目源代码: ");
+    e.append(codeBlock("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
     e.append(copyButton("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
     return e;
   }
+
 }
