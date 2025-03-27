@@ -673,7 +673,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
   /**
    * 输出提示栏 需要有dom环境
-   * @version 0.7.c6c0425
+   * @version 0.8.027aefc
    */
   async function newLogFrame() {
     // 粘贴到此处
