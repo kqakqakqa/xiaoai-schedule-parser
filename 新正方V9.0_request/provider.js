@@ -71,7 +71,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   /* 获取课程数据请求参数 */
   const defaultGnmkdm = undefined;
   const useSu = false;
-  const useXsdm = false;
+  const useXsdm = true;
 
   let tryXnm, tryXqm, tryGnmkdm, trySu;
   try {
@@ -100,7 +100,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
     xqm: xqm,
     gnmkdm: gnmkdm,
     kzlx: "ck",
-    ...(useXsdm ? { xsdm: xsdm } : {}),
+    ...(useXsdm ? { xsdm: "" } : {}),
     ...(useSu ? { su: su } : {}),
   }).toString();
 
