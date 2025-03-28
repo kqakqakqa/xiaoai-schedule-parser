@@ -4,6 +4,8 @@
 
 ## 适配学校
 
+### 新正方
+
 [哈尔滨远东理工学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/哈尔滨远东理工学院/新正方V9.0_request/provider.js)
 
 [泰山科技学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/泰山科技学院/新正方V9.0_request/provider.js)
