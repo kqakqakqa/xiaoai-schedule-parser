@@ -4,6 +4,8 @@
 
 ## 适配学校
 
+[泰山科技学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/泰山科技学院/新正方V9.0_request/provider.js)
+
 [江苏大学京江学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/江苏大学京江学院/新正方V9.0_request/provider.js)
 
 [保定理工学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/保定理工学院/新正方V9.0_request/provider.js)
