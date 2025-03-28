@@ -6,6 +6,8 @@
 
 ### 新正方
 
+[郑州职业技术学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/郑州职业技术学院/新正方V9.0_request/provider.js)
+
 [哈尔滨远东理工学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/哈尔滨远东理工学院/新正方V9.0_request/provider.js)
 
 [泰山科技学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/泰山科技学院/新正方V9.0_request/provider.js)
