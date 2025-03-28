@@ -4,6 +4,10 @@
 
 ## 适配学校
 
+[江苏大学京江学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/江苏大学京江学院/新正方V9.0_request/provider.js)
+
+[保定理工学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/保定理工学院/新正方V9.0_request/provider.js)
+
 [新疆农业大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/新疆农业大学/新正方V9.0_request/provider.js)
 
 [三江学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/三江学院/新正方V9.0_request/provider.js)
