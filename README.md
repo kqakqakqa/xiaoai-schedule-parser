@@ -44,7 +44,7 @@
 
 `496486285` 教务导入适配联盟 官方QQ群
 
-[其他开发者的适配项目](https://kqakqakqa.github.io/xiaoai-schedule-parser/other-repos.html)
+[其他开发者的适配项目](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/doc/other-repos.csv)
 
 [AISchedule基础教程](https://aisc.ioll.top/) by 啊也
 
