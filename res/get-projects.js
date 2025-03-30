@@ -10,8 +10,8 @@ const schs = Object.values((await(await fetch(
 
 const prs = []
 
-for (const sch of schs) {
-  console.log(`fetching ${prs.length + 1} / ${schs.length}: ${sch.name}`)
+for (const [i, sch] of schs.entries()) {
+  console.log(`fetching ${i + 1} / ${schs.length}: ${sch.name}`)
   prs.push(...(await(await fetch(
     `https://open-schedule-prod.ai.xiaomi.com/api/v2/client/project/_search?sid=${sch.id}`,
     {
@@ -45,11 +45,7 @@ function calculateScore(pos, ord, neg) {
   const count = pos + ord + weightedNeg
   if (count === 0) return "🟦 无评分"
   const rank = (pos * 10 + ord * 7.5 + weightedNeg * 0) / count
-  let label
-  if (rank > 7.5) label = "🟩"
-  else if (rank > 5) label = "🟨"
-  else label = "🟥"
-
+  const label = (rank > 7.5) ? "🟩" : ((rank > 5) ? "🟨" : "🟥")
   return `${label} ${rank.toFixed(1)}分`
 }
 
