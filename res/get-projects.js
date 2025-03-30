@@ -1,4 +1,4 @@
-const schs = (await(await fetch(
+const schs = Object.values((await(await fetch(
   "https://open-schedule-prod.ai.xiaomi.com/api/v2/client/school",
   {
     "headers": {
@@ -6,11 +6,12 @@ const schs = (await(await fetch(
       "x-user-id": "0"
     }
   }
-)).json()).message.flat()
+)).json()).message).flat()
 
 const prs = []
 
 for (const sch of schs) {
+  console.log(`fetching ${prs.length + 1} / ${schs.length}: ${sch.name}`)
   prs.push(...(await(await fetch(
     `https://open-schedule-prod.ai.xiaomi.com/api/v2/client/project/_search?sid=${sch.id}`,
     {
@@ -19,7 +20,7 @@ for (const sch of schs) {
         "x-user-id": "0"
       }
     }
-  )).json().message))
+  )).json()).message)
 }
 
 const prsdl = prs.map(e => ({
