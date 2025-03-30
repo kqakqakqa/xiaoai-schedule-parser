@@ -6,6 +6,8 @@
 
 ### 新正方
 
+[山东财经大学东方学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/山东财经大学东方学院/新正方V9.0_request/provider.js)
+
 [重庆智能工程职业学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/重庆智能工程职业学院/新正方V9.0_request/provider.js)
 
 [山西警察学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/山西警察学院/新正方V9.0_request/provider.js)
