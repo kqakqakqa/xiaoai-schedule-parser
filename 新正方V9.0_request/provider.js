@@ -70,8 +70,8 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
   /* 获取课程数据请求参数 */
   const defaultGnmkdm = "N2151";
-  const useSu = false;
-  const useXsdm = true;
+  const useSu = true;
+  const useXsdm = false;
   const useValidate = false;
 
   let tryXnm, tryXqm, tryGnmkdm, tryXsdm, trySu, tryValidate;
