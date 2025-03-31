@@ -50,11 +50,13 @@
 
 `496486285` 教务导入适配联盟 官方QQ群
 
-[其他开发者的适配项目](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/main/res/other-repos.csv)
+[其他开发者的适配项目](res/other-repos.csv)
 
 [AISchedule基础教程](https://aisc.ioll.top/) by 啊也
 
 [小爱课程表适配不完全指北——以 ZJUT 本科正方教务系统为例](https://zhul.in/2024/11/18/mi-ai-class-schedule-adapter-for-zjut/) by 竹林里有冰
+
+[常见教务系统辨认](res/常见教务系统辨认/readme.md)
 
 [小爱课程表网页链接](https://aischedule.ai.xiaomi.com/)
 
