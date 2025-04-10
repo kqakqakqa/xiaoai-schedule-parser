@@ -30,7 +30,8 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       typeof tryLogFrame?.copyButton !== "function" ||
       typeof tryLogFrame?.codeBlock !== "function" ||
       typeof tryLogFrame?.codeBlockShort !== "function" ||
-      typeof tryLogFrame?.repoLink !== "function"
+      typeof tryLogFrame?.repoLink !== "function" ||
+      typeof tryLogFrame?.jumpToPage !== "function"
     ) throw new Error("缺少函数");
 
   } catch (err) {
@@ -63,6 +64,8 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   if (!document.URL.includes("/xskbcx_cxXskbcxIndex.html")) {
     logFrame.log(
       "<b>导入失败</b><br />页面不正确, 请确保当前位于课表查询页面<br /><br />",
+      logFrame.jumpToPage(),
+      "<br /><br />",
       logFrame.repoLink()
     );
     return "do not continue";
@@ -240,7 +243,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
   if (kbList.length > courses.length) {
     logFrame.log(
-      "<b>出现错误</b><br />可能有部分课程转换失败，请注意检查<br />3秒后继续...<br />"
+      "<b>出现错误</b><br />可能有部分课程转换失败, 请注意检查<br />3秒后继续...<br />"
     );
     await new Promise(e => setTimeout(e, 3000));
   }
@@ -499,7 +502,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
     if (timetableRaw.length > sections.length) {
       logFrame.log(
-        "<b>出现错误</b><br />可能有部分节次转换失败，请注意检查<br />3秒后继续...<br />"
+        "<b>出现错误</b><br />可能有部分节次转换失败, 请注意检查<br />3秒后继续...<br />"
       );
       await new Promise(e => setTimeout(e, 3000));
     }
@@ -673,7 +676,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
   /**
    * 输出提示栏 需要有dom环境
-   * @version 0.8.027aefc
+   * @version 0.9.7543a31
    */
   async function newLogFrame() {
     // 删除已存在frame
@@ -735,7 +738,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
         baseElement.remove();
       }
     });
-  
+
     function log(...msgs) {
       for (const msg of msgs) {
         console.log(msg);
@@ -750,15 +753,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       }
       iframeDocument.body.scrollTo(0, iframeDocument.body.scrollHeight + 1);
     }
-  
-    baseElement.log = log;
-    baseElement.copyButton = copyButton;
-    baseElement.codeBlock = codeBlock;
-    baseElement.codeBlockShort = codeBlockShort;
-    baseElement.repoLink = repoLink;
-    return baseElement;
-  
-  
+
     function copyButton(str) {
       const copyButton = document.createElement("button");
       copyButton.textContent = "点击复制";
@@ -781,7 +776,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       });
       return copyButton;
     }
-  
+
     function codeBlock(str) {
       const code = document.createElement("code");
       code.style.cssText = `
@@ -793,20 +788,48 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       code.textContent = String(str);
       return code;
     }
-  
+
     function codeBlockShort(str) {
       return codeBlock(String(str).replace(/^([\s\S]{10})[\s\S]*$/, "$1..."));
     }
-  
+
     function repoLink() {
       const e = document.createElement("span");
-      e.append("如果你需要，可以查看本适配项目源代码: ");
+      e.append("如果你需要查看本适配项目的源代码: ");
       e.append(codeBlock("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
       e.append(" ");
       e.append(copyButton("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
       return e;
     }
-  
+
+    function jumpToPage() {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "网页地址";
+
+      const button = document.createElement("button");
+      button.textContent = "跳转";
+      button.addEventListener("click", () => {
+        const url = input.value.trim();
+        if (url) {
+          const validUrl = /^https?:\/\//.test(url) ? url : "https://" + url;
+          window.location.href = validUrl;
+        }
+      });
+
+      const e = document.createElement("span");
+      e.append("如果你需要跳转到别的地址: ", input, " ", button);
+      return e;
+    }
+
+    baseElement.log = log;
+    baseElement.copyButton = copyButton;
+    baseElement.codeBlock = codeBlock;
+    baseElement.codeBlockShort = codeBlockShort;
+    baseElement.repoLink = repoLink;
+    baseElement.jumpToPage = jumpToPage;
+    return baseElement;
+
   }
 
 

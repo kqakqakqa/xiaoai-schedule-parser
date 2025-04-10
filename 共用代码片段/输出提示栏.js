@@ -1,6 +1,6 @@
 /**
  * 输出提示栏 需要有dom环境
- * @version 0.8
+ * @version 0.9
  */
 async function newLogFrame() {
   // 删除已存在frame
@@ -78,14 +78,6 @@ async function newLogFrame() {
     iframeDocument.body.scrollTo(0, iframeDocument.body.scrollHeight + 1);
   }
 
-  baseElement.log = log;
-  baseElement.copyButton = copyButton;
-  baseElement.codeBlock = codeBlock;
-  baseElement.codeBlockShort = codeBlockShort;
-  baseElement.repoLink = repoLink;
-  return baseElement;
-
-
   function copyButton(str) {
     const copyButton = document.createElement("button");
     copyButton.textContent = "点击复制";
@@ -127,11 +119,39 @@ async function newLogFrame() {
 
   function repoLink() {
     const e = document.createElement("span");
-    e.append("如果你需要，可以查看本适配项目源代码: ");
+    e.append("如果你需要查看本适配项目的源代码: ");
     e.append(codeBlock("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
     e.append(" ");
     e.append(copyButton("https://github.com/kqakqakqa/xiaoai-schedule-parser"));
     return e;
   }
+
+  function jumpToPage() {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "网页地址";
+
+    const button = document.createElement("button");
+    button.textContent = "跳转";
+    button.addEventListener("click", () => {
+      const url = input.value.trim();
+      if (url) {
+        const validUrl = /^https?:\/\//.test(url) ? url : "https://" + url;
+        window.location.href = validUrl;
+      }
+    });
+
+    const e = document.createElement("span");
+    e.append("如果你需要跳转到别的地址: ", input, " ", button);
+    return e;
+  }
+
+  baseElement.log = log;
+  baseElement.copyButton = copyButton;
+  baseElement.codeBlock = codeBlock;
+  baseElement.codeBlockShort = codeBlockShort;
+  baseElement.repoLink = repoLink;
+  baseElement.jumpToPage = jumpToPage;
+  return baseElement;
 
 }
