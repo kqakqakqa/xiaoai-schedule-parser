@@ -30,7 +30,8 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
       typeof tryLogFrame?.copyButton !== "function" ||
       typeof tryLogFrame?.codeBlock !== "function" ||
       typeof tryLogFrame?.codeBlockShort !== "function" ||
-      typeof tryLogFrame?.repoLink !== "function"
+      typeof tryLogFrame?.repoLink !== "function" ||
+      typeof tryLogFrame?.jumpToPage !== "function"
     ) throw new Error("缺少函数");
 
   } catch (err) {
@@ -63,6 +64,8 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
   if (!document.URL.includes("/xskbcx_cxXskbcxIndex.html")) {
     logFrame.log(
       "<b>导入失败</b><br />页面不正确, 请确保当前位于课表查询页面<br /><br />",
+      logFrame.jumpToPage(),
+      "<br /><br />",
       logFrame.repoLink()
     );
     return "do not continue";
@@ -240,7 +243,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
   if (kbList.length > courses.length) {
     logFrame.log(
-      "<b>出现错误</b><br />可能有部分课程转换失败，请注意检查<br />3秒后继续...<br />"
+      "<b>出现错误</b><br />可能有部分课程转换失败, 请注意检查<br />3秒后继续...<br />"
     );
     await new Promise(e => setTimeout(e, 3000));
   }
@@ -499,7 +502,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
     if (timetableRaw.length > sections.length) {
       logFrame.log(
-        "<b>出现错误</b><br />可能有部分节次转换失败，请注意检查<br />3秒后继续...<br />"
+        "<b>出现错误</b><br />可能有部分节次转换失败, 请注意检查<br />3秒后继续...<br />"
       );
       await new Promise(e => setTimeout(e, 3000));
     }
@@ -673,7 +676,7 @@ async function scheduleHtmlProvider(iframeContent = "", frameContent = "", dom =
 
   /**
    * 输出提示栏 需要有dom环境
-   * @version 0.8.027aefc
+   * @version 0.9.7543a31
    */
   async function newLogFrame() {
     // 粘贴到此处
