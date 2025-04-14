@@ -6,6 +6,14 @@
 
 ### 新正方
 
+[山西工学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/山西工学院/新正方V9.0_request/provider.js)
+
+[中国矿业大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/中国矿业大学/新正方V9.0_request/provider.js)
+
+[广东药科大学](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/广东药科大学/新正方V9.0_request/provider.js)
+
+[广西自然资源职业技术学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/广西自然资源职业技术学院/新正方V9.0_request/provider.js)
+
 [云南水利水电职业学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/云南水利水电职业学院/新正方V9.0_request/provider.js)
 
 [广州铁路职业技术学院](https://github.com/kqakqakqa/xiaoai-schedule-parser/blob/广州铁路职业技术学院/新正方V9.0_request/provider.js)
