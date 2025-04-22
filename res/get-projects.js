@@ -35,7 +35,7 @@ const prsdl = prs.map(e => ({
   rank: calculateScore(e.edition.positive, e.edition.ordinary, e.edition.negative),
   ranks: `🔺${e.edition.positive} 🔸${e.edition.ordinary} 🔻${e.edition.negative}`,
   usage: `${e.edition.usage}人使用`,
-  time: (new Date(e.edition.updatedTime * 1000)).toISOString().replace("T", " ").substring(0, 19),
+  time: (new Date(e.edition.updatedTime * 1000 + 28800000)).toISOString().replace("T", " ").substring(0, 19),
   coder_id: e.coder.id,
   coder: e.coder.coderName,
 }))
