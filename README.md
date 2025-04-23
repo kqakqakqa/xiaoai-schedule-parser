@@ -77,3 +77,5 @@
 [小爱课程表网页链接](https://aischedule.ai.xiaomi.com/)
 
 [小爱课程表网页链接 (2)](https://i.ai.mi.com/h5/precache/ai-schedule/)
+
+[小爱课程表网页链接 (3)](https://i.xiaomixiaoai.com/h5/precache/ai-schedule/)
